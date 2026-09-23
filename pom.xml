@@ -12,7 +12,13 @@
   <version>0.1.0-SNAPSHOT</version>
 
   <properties>
-    <maven.compiler.release>25</maven.compiler.release>
+    <!--
+      Java 21 is the floor the Camunda 8.9 connector SDK states, and compiling to it
+      keeps the jar runnable on any 21+ Connector Runtime. Do not raise this without
+      checking the runtime your connector is deployed into: a higher release makes the
+      jar fail with UnsupportedClassVersionError on older runtimes.
+    -->
+    <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <version.connectors>8.9.12</version.connectors>

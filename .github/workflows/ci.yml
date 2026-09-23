@@ -34,6 +34,17 @@ jobs:
 
       # Live tests are tagged `live` and excluded by default, so this needs no API
       # key and makes no network calls to the Jev API.
+      # Guards against the compiler target drifting above the JDK CI runs on,
+      # which is how a Java 25 pom slipped through a JDK 27 laptop unnoticed.
+      - name: Check compiler target matches CI JDK
+        run: |
+          target=$(mvn -B -q help:evaluate -Dexpression=maven.compiler.release -DforceStdout)
+          echo "pom targets Java $target; CI runs JDK 21"
+          if [ "$target" != "21" ]; then
+            echo "::error file=pom.xml::maven.compiler.release is $target but CI builds on JDK 21. Update the workflow's java-version too, or revert the pom."
+            exit 1
+          fi
+
       - name: Build and test
         run: mvn -B clean verify
 
