@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  # For the live-API job below.
+  schedule:
+    - cron: '0 6 * * 1'   # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to a PR cancels the run still in flight for it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Live tests are tagged `live` and excluded by default, so this needs no API
+      # key and makes no network calls to the Jev API.
+      - name: Build and test
+        run: mvn -B clean verify
+
+      # The element template is generated from annotations during the build. If the
+      # committed copy differs, someone hand-edited it or forgot to commit a regen.
+      - name: Check element template is up to date
+        run: |
+          if ! git diff --exit-code -- element-templates/; then
+            echo "::error file=element-templates/jev-router-connector.json::Generated element template is out of date. Run './jev test' and commit the result - do not hand-edit this file."
+            exit 1
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Validate element template against the Camunda schema
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/schema.json" \
+            "https://unpkg.com/@camunda/zeebe-element-templates-json-schema@${SCHEMA_VERSION}/resources/schema.json"
+          npx --yes ajv-cli@5 validate \
+            -s "$RUNNER_TEMP/schema.json" \
+            -d element-templates/jev-router-connector.json \
+            --spec=draft7 --strict=false
+        env:
+          # ajv's strict mode rejects Camunda's own schema, hence --strict=false.
+          SCHEMA_VERSION: 0.46.0
+
+      - name: Upload connector jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-router-connector
+          path: target/jev-router-connector-*.jar
+          if-no-files-found: error
+          retention-days: 14
+
+  live:
+    name: Live Jev API contract
+    # Never on pull requests: secrets are unavailable to fork PRs, and these tests
+    # spend real tokens. Weekly, so API drift is caught without a PR waiting on it.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Run live tests
+        env:
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        run: |
+          if [ -z "$TYPESAFE_API_KEY" ]; then
+            echo "::warning::TYPESAFE_API_KEY secret is not set - skipping live tests."
+            exit 0
+          fi
+          mvn -B test -Dgroups=live -Dtest.excludedGroups= -DfailIfNoTests=false
