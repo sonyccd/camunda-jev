@@ -1,0 +1,218 @@
+{
+  "$schema" : "https://unpkg.com/@camunda/zeebe-element-templates-json-schema/resources/schema.json",
+  "name" : "Jev Router",
+  "id" : "ai.typesafe.camunda.jev.router.v1",
+  "description" : "Route work by meaning using a TypeSafe Jev Choice judgment.",
+  "metadata" : {
+    "keywords" : [ ]
+  },
+  "documentationRef" : "https://docs.typesafe.ai/primitives/choice",
+  "version" : 1,
+  "category" : {
+    "id" : "connectors",
+    "name" : "Connectors"
+  },
+  "appliesTo" : [ "bpmn:Task" ],
+  "elementType" : {
+    "value" : "bpmn:ServiceTask"
+  },
+  "groups" : [ {
+    "id" : "authentication",
+    "label" : "Authentication"
+  }, {
+    "id" : "input",
+    "label" : "Routing decision"
+  }, {
+    "id" : "advanced",
+    "label" : "Advanced",
+    "openByDefault" : false
+  }, {
+    "id" : "connector",
+    "label" : "Connector"
+  }, {
+    "id" : "output",
+    "label" : "Output mapping"
+  }, {
+    "id" : "error",
+    "label" : "Error handling"
+  }, {
+    "id" : "retries",
+    "label" : "Retries"
+  } ],
+  "properties" : [ {
+    "value" : "ai.typesafe:jev-router:1",
+    "binding" : {
+      "property" : "type",
+      "type" : "zeebe:taskDefinition"
+    },
+    "type" : "Hidden"
+  }, {
+    "id" : "apiKey",
+    "label" : "API key",
+    "description" : "TypeSafe API key. Use a Camunda secret rather than pasting a raw key.",
+    "optional" : false,
+    "value" : "{{secrets.TYPESAFE_API_KEY}}",
+    "constraints" : {
+      "notEmpty" : true
+    },
+    "feel" : "optional",
+    "group" : "authentication",
+    "binding" : {
+      "name" : "apiKey",
+      "type" : "zeebe:input"
+    },
+    "type" : "String"
+  }, {
+    "id" : "state",
+    "label" : "State",
+    "description" : "The data Jev judges. A string, or a FEEL expression resolving to a map or list, which is sent as structured JSON.",
+    "optional" : false,
+    "constraints" : {
+      "notEmpty" : true
+    },
+    "feel" : "optional",
+    "group" : "input",
+    "binding" : {
+      "name" : "state",
+      "type" : "zeebe:input"
+    },
+    "type" : "Text"
+  }, {
+    "id" : "question",
+    "label" : "Question",
+    "description" : "Plain-language instruction, e.g. \"Which team should handle this?\"",
+    "optional" : false,
+    "constraints" : {
+      "notEmpty" : true
+    },
+    "feel" : "optional",
+    "group" : "input",
+    "binding" : {
+      "name" : "question",
+      "type" : "zeebe:input"
+    },
+    "type" : "Text"
+  }, {
+    "id" : "options",
+    "label" : "Options",
+    "description" : "FEEL map of option name to description, e.g. {\"billing\": \"Payments, refunds\", \"technical\": \"Bugs, outages\"}. 2 to 255 options. \"undecided\" is reserved.",
+    "optional" : false,
+    "constraints" : {
+      "notEmpty" : true
+    },
+    "feel" : "required",
+    "group" : "input",
+    "binding" : {
+      "name" : "options",
+      "type" : "zeebe:input"
+    },
+    "type" : "Text"
+  }, {
+    "id" : "threshold",
+    "label" : "Confidence threshold",
+    "description" : "How sure should the AI be before it commits? Below this, the result is \"undecided\". Note confidence is not the winning option's probability.",
+    "optional" : false,
+    "value" : 0.7,
+    "constraints" : {
+      "notEmpty" : true
+    },
+    "feel" : "optional",
+    "group" : "input",
+    "binding" : {
+      "name" : "threshold",
+      "type" : "zeebe:input"
+    },
+    "type" : "Number"
+  }, {
+    "id" : "model",
+    "label" : "Model",
+    "description" : "Jev model ID. Pin a version once you have tuned a threshold against it.",
+    "optional" : true,
+    "value" : "jev-1.13.0",
+    "feel" : "optional",
+    "group" : "advanced",
+    "binding" : {
+      "name" : "model",
+      "type" : "zeebe:input"
+    },
+    "type" : "String"
+  }, {
+    "id" : "version",
+    "label" : "Version",
+    "description" : "Version of the element template",
+    "value" : "1",
+    "group" : "connector",
+    "binding" : {
+      "key" : "elementTemplateVersion",
+      "type" : "zeebe:taskHeader"
+    },
+    "type" : "Hidden"
+  }, {
+    "id" : "id",
+    "label" : "ID",
+    "description" : "ID of the element template",
+    "value" : "ai.typesafe.camunda.jev.router.v1",
+    "group" : "connector",
+    "binding" : {
+      "key" : "elementTemplateId",
+      "type" : "zeebe:taskHeader"
+    },
+    "type" : "Hidden"
+  }, {
+    "id" : "resultVariable",
+    "label" : "Result variable",
+    "description" : "Name of variable to store the response in",
+    "value" : "jevResult",
+    "group" : "output",
+    "binding" : {
+      "key" : "resultVariable",
+      "type" : "zeebe:taskHeader"
+    },
+    "type" : "String"
+  }, {
+    "id" : "resultExpression",
+    "label" : "Result expression",
+    "description" : "Expression to map the response into process variables",
+    "feel" : "required",
+    "group" : "output",
+    "binding" : {
+      "key" : "resultExpression",
+      "type" : "zeebe:taskHeader"
+    },
+    "type" : "Text"
+  }, {
+    "id" : "errorExpression",
+    "label" : "Error expression",
+    "description" : "Expression to handle errors. Details in the <a href=\"https://docs.camunda.io/docs/components/connectors/use-connectors/\" target=\"_blank\">documentation</a>.",
+    "feel" : "required",
+    "group" : "error",
+    "binding" : {
+      "key" : "errorExpression",
+      "type" : "zeebe:taskHeader"
+    },
+    "type" : "Text"
+  }, {
+    "id" : "retryCount",
+    "label" : "Retries",
+    "description" : "Number of retries",
+    "value" : "3",
+    "feel" : "optional",
+    "group" : "retries",
+    "binding" : {
+      "property" : "retries",
+      "type" : "zeebe:taskDefinition"
+    },
+    "type" : "String"
+  }, {
+    "id" : "retryBackoff",
+    "label" : "Retry backoff",
+    "description" : "ISO-8601 duration to wait between retries",
+    "value" : "PT0S",
+    "group" : "retries",
+    "binding" : {
+      "key" : "retryBackoff",
+      "type" : "zeebe:taskHeader"
+    },
+    "type" : "String"
+  } ]
+}

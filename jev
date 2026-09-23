@@ -1,0 +1,359 @@
+#!/usr/bin/env bash
+# One entrypoint for building, testing and demoing the Jev Router connector.
+# Run `./jev help` for the command list.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMPOSE_FILE="$ROOT/docker/docker-compose.yml"
+JAR="$ROOT/target/jev-router-connector-0.1.0-SNAPSHOT.jar"
+BPMN="$ROOT/examples/support-ticket-routing.bpmn"
+PROCESS_ID="support-ticket-routing"
+REST="http://localhost:8080"
+CONNECTORS_HEALTH="http://localhost:8086/actuator/health/readiness"
+
+bold=$'\033[1m'; dim=$'\033[2m'; red=$'\033[31m'; green=$'\033[32m'; yellow=$'\033[33m'; reset=$'\033[0m'
+say()  { printf '%s\n' "$*"; }
+step() { printf '%s==>%s %s\n' "$bold" "$reset" "$*"; }
+ok()   { printf '%s  ok%s %s\n' "$green" "$reset" "$*"; }
+warn() { printf '%s  !!%s %s\n' "$yellow" "$reset" "$*"; }
+die()  { printf '%s error:%s %s\n' "$red" "$reset" "$*" >&2; exit 1; }
+
+# Loads TYPESAFE_API_KEY from .env if it is not already exported.
+load_env() {
+  if [[ -f "$ROOT/.env" ]]; then
+    set -a; . "$ROOT/.env"; set +a
+  fi
+}
+
+need_key() {
+  load_env
+  [[ -n "${TYPESAFE_API_KEY:-}" ]] || die "TYPESAFE_API_KEY is not set.
+  Run:  ./jev key
+  (prompts without echoing, so the key stays out of your shell history)"
+}
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+compose() {
+  load_env
+  docker compose -f "$COMPOSE_FILE" "$@"
+}
+
+ensure_jar() {
+  if [[ ! -f "$JAR" ]]; then
+    step "Connector jar not built yet - building"
+    cmd_build
+  fi
+}
+
+# ---------------------------------------------------------------- commands
+
+cmd_doctor() {
+  local problems=0
+  step "Checking prerequisites"
+
+  # macOS ships a /usr/bin/java stub that exists but fails without a real JDK, so test
+  # that it actually runs. What matters for the build is the JDK Maven resolves, which
+  # is reported below and may differ from whatever is first on PATH.
+  if have mvn; then
+    local mvn_java
+    mvn_java=$(mvn -v 2>/dev/null | grep -i '^Java version:' | sed 's/Java version: *\([^,]*\).*/\1/')
+    ok "maven       $(mvn -v 2>/dev/null | head -1 | awk '{print $3}')"
+    if [[ -n "$mvn_java" ]]; then
+      local major="${mvn_java%%.*}"
+      if (( major >= 21 )); then ok "jdk         $mvn_java (used by maven)"
+      else warn "jdk         $mvn_java is too old - this project needs 21+
+              brew install openjdk@21"; problems=$((problems+1)); fi
+    else warn "jdk         maven could not find a JDK - brew install openjdk@21"; problems=$((problems+1)); fi
+  else
+    warn "maven       not found - install with: brew install maven"; problems=$((problems+1))
+    java -version >/dev/null 2>&1 || { warn "jdk         not found - brew install openjdk@21"; problems=$((problems+1)); }
+  fi
+
+  if have docker; then
+    if docker info >/dev/null 2>&1; then ok "docker      running"
+    else warn "docker      installed but not running - start Docker Desktop"; problems=$((problems+1)); fi
+  else warn "docker      not found - https://docs.docker.com/get-docker/"; problems=$((problems+1)); fi
+
+  load_env
+  if [[ -n "${TYPESAFE_API_KEY:-}" ]]; then ok "api key     set (${#TYPESAFE_API_KEY} chars)"
+  else warn "api key     not set - needed for 'ask', 'smoke' and 'demo'
+              echo 'TYPESAFE_API_KEY=sk-...' > $ROOT/.env"; problems=$((problems+1)); fi
+
+  if [[ -f "$JAR" ]]; then ok "jar         built"
+  else say "  ${dim}--  jar         not built yet (run ./jev build)${reset}"; fi
+
+  say ""
+  if (( problems == 0 )); then ok "Everything looks good. Try: ./jev demo"
+  else warn "$problems item(s) need attention (see above)."; fi
+}
+
+cmd_key() {
+  local k
+  if [[ -t 0 ]]; then
+    printf 'Paste your TypeSafe API key (input is hidden): '
+    read -rs k
+    printf '\n'
+  else
+    read -r k    # allows: echo "$KEY" | ./jev key
+  fi
+  [[ -n "$k" ]] || die "no key entered"
+
+  umask 077
+  printf 'TYPESAFE_API_KEY=%s\n' "$k" > "$ROOT/.env"
+  chmod 600 "$ROOT/.env"
+  unset k
+
+  ok "wrote .env (owner-readable only, and gitignored)"
+  say "  ${dim}Never pass a key as a command argument - it lands in your shell history.${reset}"
+  say "  ${dim}Next: ./jev demo${reset}"
+}
+
+cmd_build() {
+  step "Building connector"
+  (cd "$ROOT" && mvn -q clean package -DskipTests)
+  ok "built $(basename "$JAR")"
+}
+
+cmd_test() {
+  step "Running tests (no network, all HTTP mocked)"
+  (cd "$ROOT" && mvn clean verify)
+}
+
+cmd_smoke() {
+  need_key
+  step "Calling the real Jev API through JevClient"
+  (cd "$ROOT" && mvn -q test -Dgroups=live -Dtest.excludedGroups= -DfailIfNoTests=false)
+  ok "live API contract verified"
+}
+
+cmd_ask() {
+  need_key
+  local text="${*:-}"
+  [[ -n "$text" ]] || die "usage: ./jev ask \"my payouts have been failing for 3 days\""
+  step "Asking Jev to route: \"$text\""
+  local status=0
+  (cd "$ROOT" && mvn -q test-compile exec:java \
+      -Dorg.slf4j.simpleLogger.defaultLogLevel=warn \
+      -Dexec.mainClass=ai.typesafe.camunda.jev.JevDemoCli \
+      -Dexec.classpathScope=test \
+      -Dexec.args="$text" 2>&1) | grep -vE '^\[ERROR\]|^\[INFO\]|^\[WARNING\]|SLF4J|HV0000|^INFO: |Hibernate|org\.hibernate' || status=$?
+  return 0
+}
+
+wait_for() {
+  local url="$1" name="$2" tries="${3:-90}"
+  printf '  waiting for %s ' "$name"
+  for ((i=0; i<tries; i++)); do
+    if curl -sf -o /dev/null --max-time 3 "$url"; then printf ' ready\n'; return 0; fi
+    printf '.'; sleep 2
+  done
+  printf '\n'
+  die "$name did not become ready in time. Check: ./jev logs"
+}
+
+cmd_up() {
+  need_key
+  ensure_jar
+  step "Starting Camunda 8 + connector runtime"
+  compose up -d --wait 2>/dev/null || compose up -d
+  wait_for "http://localhost:9600/actuator/health/status" "orchestration" 90
+  wait_for "$CONNECTORS_HEALTH" "connectors" 60
+  ok "stack is up"
+  say "  ${dim}Operate/Tasklist  $REST   (demo / demo)${reset}"
+  say "  ${dim}Connectors health $CONNECTORS_HEALTH${reset}"
+}
+
+cmd_down() {
+  step "Stopping stack"
+  if [[ "${1:-}" == "--clean" ]]; then
+    compose down -v
+    ok "stopped and volumes removed"
+  else
+    compose down
+    ok "stopped (data kept - use ./jev down --clean to wipe)"
+  fi
+}
+
+cmd_deploy() {
+  step "Deploying $(basename "$BPMN")"
+  local out
+  out=$(curl -sf -X POST "$REST/v2/deployments" \
+        -H "Accept: application/json" \
+        -F "resources=@$BPMN") || die "deploy failed - is the stack up? (./jev up)"
+  say "$out" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+for item in d.get('deployments', []):
+    p = item.get('processDefinition') or {}
+    if p:
+        print('  process:', p.get('processDefinitionId'), 'version', p.get('processDefinitionVersion'))
+print('  deploymentKey:', d.get('deploymentKey'))
+" 2>/dev/null || say "$out"
+  ok "deployed"
+}
+
+cmd_run() {
+  local text="${*:-Our payouts have been failing for 3 days and the API returns 500.}"
+  step "Starting a ticket: \"$text\""
+  local payload key
+  payload=$(python3 -c "
+import json,sys
+print(json.dumps({
+  'processDefinitionId': '$PROCESS_ID',
+  'variables': {'ticket': {'subject': 'Support request', 'body': sys.argv[1]}}
+}))" "$text")
+
+  key=$(curl -sf -X POST "$REST/v2/process-instances" \
+        -H 'Content-Type: application/json' \
+        -d "$payload" \
+      | python3 -c "import json,sys; print(json.load(sys.stdin)['processInstanceKey'])") \
+    || die "could not start a process instance - is it deployed? (./jev deploy)"
+
+  say "  instance $key"
+  printf '  waiting for the routing decision '
+  for ((i=0; i<45; i++)); do
+    local result
+    result=$(curl -sf -X POST "$REST/v2/variables/search" \
+        -H 'Content-Type: application/json' \
+        -d "{\"filter\":{\"processInstanceKey\":\"$key\",\"name\":\"jevResult\"}}" 2>/dev/null \
+      | python3 -c "
+import json,sys
+try:
+    items=json.load(sys.stdin).get('items',[])
+    print(items[0]['value'] if items else '')
+except Exception:
+    print('')
+" 2>/dev/null) || result=""
+
+    if [[ -n "$result" && "$result" != "null" ]]; then
+      printf '\n\n'
+      show_result "$result"
+      say ""
+      ok "see it in Operate: $REST/operate/processes/$key"
+      return 0
+    fi
+
+    # A failed call raises an incident rather than returning undecided, so surface
+    # that immediately instead of waiting out the whole timeout.
+    local incident
+    incident=$(curl -sf -X POST "$REST/v2/incidents/search" \
+        -H 'Content-Type: application/json' \
+        -d "{\"filter\":{\"processInstanceKey\":\"$key\"}}" 2>/dev/null \
+      | python3 -c "
+import json,sys
+try:
+    items=json.load(sys.stdin).get('items',[])
+    print(items[0].get('errorMessage','').split('| Error variables')[0].strip() if items else '')
+except Exception:
+    print('')
+" 2>/dev/null) || incident=""
+
+    if [[ -n "$incident" ]]; then
+      printf '\n\n'
+      warn "The connector raised an incident instead of routing:"
+      say "    $incident"
+      say ""
+      if [[ "$incident" == *"HTTP 401"* || "$incident" == *"HTTP 403"* ]]; then
+        say "  ${dim}That is an auth failure - check TYPESAFE_API_KEY in .env, then:${reset}"
+        say "  ${dim}  ./jev down && ./jev demo${reset}"
+      fi
+      say "  ${dim}Full detail: ./jev logs connectors${reset}"
+      return 1
+    fi
+
+    printf '.'; sleep 2
+  done
+  printf '\n'
+  warn "No result yet after 90s. Check ./jev logs connectors"
+  return 1
+}
+
+# Pretty-prints a jevResult JSON value.
+show_result() {
+  say "$1" | python3 -c "
+import json,sys
+v=json.loads(sys.stdin.read())
+if isinstance(v,str): v=json.loads(v)
+decided = v.get('decided')
+note = '' if decided else '   <- below threshold, routed to human triage'
+print('  choice        %s%s' % (v.get('choice'), note))
+print('  decided       %s' % decided)
+print('  confidence    %s' % v.get('confidence'))
+print('  jev picked    %s' % v.get('jevChoice'))
+print('  model         %s' % v.get('model'))
+probs = v.get('probabilities') or {}
+if probs:
+    print('  probabilities')
+    for k, p in sorted(probs.items(), key=lambda kv: -kv[1]):
+        print('    %-12s %5.2f  %s' % (k, p, '#' * max(1, int(round(p*30)))))
+"
+}
+
+cmd_demo() {
+  need_key
+  ensure_jar
+  cmd_up
+  say ""
+  cmd_deploy
+  say ""
+  cmd_run "$@"
+}
+
+cmd_logs()   { compose logs -f "${@:-}"; }
+cmd_status() {
+  step "Containers"; compose ps
+  say ""
+  step "Endpoints"
+  for pair in "orchestration|http://localhost:9600/actuator/health/status" "connectors|$CONNECTORS_HEALTH"; do
+    local name="${pair%%|*}" url="${pair##*|}"
+    if curl -sf -o /dev/null --max-time 3 "$url"; then ok "$name"; else warn "$name not responding"; fi
+  done
+}
+
+cmd_help() {
+  cat <<EOF
+${bold}Jev Router Connector${reset}
+
+  ${bold}./jev demo${reset} [text]   ${dim}everything: build, start Camunda, deploy, route a ticket${reset}
+
+${bold}Setup${reset}
+  key               store your API key in .env (hidden prompt)
+  doctor            check prerequisites and the API key
+  build             compile and package the connector
+  test              run the test suite (offline, no key needed)
+
+${bold}Try Jev directly${reset} ${dim}(no Docker)${reset}
+  ask "<text>"      route one piece of text and print the decision
+  smoke             verify the live API contract through JevClient
+
+${bold}Local stack${reset}
+  up                start Camunda 8 + connector runtime
+  deploy            deploy the example process
+  run [text]        start one ticket and show where it routed
+  status            container and endpoint health
+  logs [service]    tail logs
+  down [--clean]    stop (--clean also removes volumes)
+
+${bold}API key${reset}
+  ./jev key         prompts without echoing, so it stays out of shell history
+EOF
+}
+
+case "${1:-help}" in
+  doctor)  shift; cmd_doctor "$@" ;;
+  key)     shift; cmd_key "$@" ;;
+  build)   shift; cmd_build "$@" ;;
+  test)    shift; cmd_test "$@" ;;
+  smoke)   shift; cmd_smoke "$@" ;;
+  ask)     shift; cmd_ask "$@" ;;
+  up)      shift; cmd_up "$@" ;;
+  down)    shift; cmd_down "$@" ;;
+  deploy)  shift; cmd_deploy "$@" ;;
+  run)     shift; cmd_run "$@" ;;
+  demo)    shift; cmd_demo "$@" ;;
+  logs)    shift; cmd_logs "$@" ;;
+  status)  shift; cmd_status "$@" ;;
+  help|-h|--help) cmd_help ;;
+  *) die "unknown command '${1}'. Try: ./jev help" ;;
+esac

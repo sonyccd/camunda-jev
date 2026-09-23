@@ -1,0 +1,12 @@
+target/
+*.class
+*.iml
+.idea/
+.vscode/
+.DS_Store
+
+# Contains a real API key
+.env
+
+# Tooling from the java-upgrade agent, not part of this project
+.github/modernize/
