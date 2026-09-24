@@ -328,6 +328,22 @@ cmd_demo() {
   cmd_run "$@"
 }
 
+cmd_simulate() {
+  need_key
+  have python3 || die "python3 is required for ./jev simulate"
+  curl -sf -o /dev/null --max-time 5 "$REST/operate" \
+    || die "no Camunda at $REST. Start one, or use your own cluster."
+
+  # The load-test process is separate from the demo process; deploy it if absent.
+  step "Deploying the load-test process"
+  curl -sf -o /dev/null -X POST "$REST/v2/deployments" \
+      -F "resources=@$ROOT/examples/support-ticket-loadtest.bpmn" \
+    || die "could not deploy examples/support-ticket-loadtest.bpmn"
+  ok "deployed"
+
+  (cd "$ROOT" && python3 -m simulation.loadtest "$@")
+}
+
 cmd_logs()   { compose logs -f "${@:-}"; }
 cmd_status() {
   step "Containers"; compose ps
@@ -362,6 +378,7 @@ ${bold}Local stack${reset}
   status            container and endpoint health
   logs [service]    tail logs
   down [--clean]    stop (--clean also removes volumes)
+  simulate [opts]   load-simulate: feed N labelled tickets and report
 
 ${bold}API key${reset}
   ./jev key         prompts without echoing, so it stays out of shell history
@@ -382,6 +399,7 @@ case "${1:-help}" in
   demo)    shift; cmd_demo "$@" ;;
   logs)    shift; cmd_logs "$@" ;;
   status)  shift; cmd_status "$@" ;;
+  simulate) shift; cmd_simulate "$@" ;;
   help|-h|--help) cmd_help ;;
   *) die "unknown command '${1}'. Try: ./jev help" ;;
 esac
