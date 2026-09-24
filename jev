@@ -334,14 +334,16 @@ cmd_simulate() {
   curl -sf -o /dev/null --max-time 5 "$REST/operate" \
     || die "no Camunda at $REST. Start one, or use your own cluster."
 
-  # The load-test process is separate from the demo process; deploy it if absent.
+  # The load-test process is separate from the demo process. Deploying is
+  # idempotent in Camunda, so it is redeployed on every run rather than checked.
   step "Deploying the load-test process"
   curl -sf -o /dev/null -X POST "$REST/v2/deployments" \
       -F "resources=@$ROOT/examples/support-ticket-loadtest.bpmn" \
     || die "could not deploy examples/support-ticket-loadtest.bpmn"
   ok "deployed"
 
-  (cd "$ROOT" && python3 -m simulation.loadtest "$@")
+  # --base-url first so a user-supplied one still wins.
+  (cd "$ROOT" && python3 -m simulation.loadtest --base-url "$REST" "$@")
 }
 
 cmd_logs()   { compose logs -f "${@:-}"; }

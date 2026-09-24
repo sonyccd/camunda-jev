@@ -72,7 +72,19 @@ def _percentile(values: List[float], fraction: float) -> float:
     return ordered[index]
 
 
-def summarize(observations: List[Observation], requested_rate: float, elapsed: float) -> dict:
+def summarize(
+    observations: List[Observation],
+    requested_rate: float,
+    elapsed: float,
+    feed_elapsed: float,
+) -> dict:
+    """Summarise a run.
+
+    `feed_elapsed` covers the feed phase alone and `elapsed` the whole run
+    including the polling tail, so send rate and resolution rate are two
+    separate numbers. Conflating them makes a run that fed at exactly the
+    requested rate look as though it under-ran.
+    """
     resolved = [o for o in observations if o.resolved]
     counts = {outcome: 0 for outcome in OUTCOMES}
     confusion: Dict[Tuple[str, str], int] = {}
@@ -100,7 +112,9 @@ def summarize(observations: List[Observation], requested_rate: float, elapsed: f
         "escalation_rate": rate(escalations),
         "misroute_rate": rate(counts["misroute"]),
         "requested_rate": requested_rate,
-        "achieved_rate": (total / elapsed) if elapsed > 0 else 0.0,
+        "achieved_send_rate": (len(observations) / feed_elapsed) if feed_elapsed > 0 else 0.0,
+        "resolution_rate": (total / elapsed) if elapsed > 0 else 0.0,
+        "feed_elapsed": feed_elapsed,
         "elapsed": elapsed,
         "latency_ms": {
             "p50": _percentile(latencies, 0.50),
@@ -193,9 +207,11 @@ def format_report(summary: dict, sweep_rows: List[dict], poll_interval: float) -
 
     add("")
     add("Throughput")
-    add("  requested      %.1f/s" % summary["requested_rate"])
-    add("  achieved       %.1f/s  (%d resolved in %.1fs)"
-        % (summary["achieved_rate"], summary["resolved"], summary["elapsed"]))
+    add("  requested send   %.1f/s" % summary["requested_rate"])
+    add("  achieved send    %.1f/s  (%d sent in %.1fs of feeding)"
+        % (summary["achieved_send_rate"], summary["sent"], summary["feed_elapsed"]))
+    add("  resolutions      %.1f/s  (%d resolved in %.1fs, feed plus polling tail)"
+        % (summary["resolution_rate"], summary["resolved"], summary["elapsed"]))
     add("")
     add("Latency  (send to observation; includes up to %.1fs of poll delay)" % poll_interval)
     add("  p50 %.0fms   p95 %.0fms   p99 %.0fms"
@@ -212,8 +228,11 @@ def format_report(summary: dict, sweep_rows: List[dict], poll_interval: float) -
     add("")
     add("Confusion  (expected -> Jev's pick)")
     for expected in list(TEAMS) + [AMBIGUOUS]:
-        row = ["%s %d" % (pick, count)
-               for (exp, pick), count in sorted(summary["confusion"].items())
+        # jev_choice can be None on a resolved case (the connector answered but
+        # named no team), which would make a plain sort raise at print time.
+        row = ["%s %d" % (pick or "none", count)
+               for (exp, pick), count in sorted(
+                   summary["confusion"].items(), key=lambda item: (item[0][0], item[0][1] or ""))
                if exp == expected]
         if row:
             add("  %-10s %s" % (expected, "   ".join(row)))

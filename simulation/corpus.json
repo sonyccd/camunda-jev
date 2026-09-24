@@ -203,7 +203,7 @@
       "id": "billing-034",
       "expected": "billing",
       "subject": "Year-end invoice reconciliation",
-      "body": "Dear Billing Team,\n\nAs we approach our fiscal year end, our accounts team is reconciling all vendor invoices for the past twelve months and has found two gaps in the sequence: invoices for February and August do not appear to have been issued, or at least were not received at this end. Could you confirm whether these were generated, and if so resend them? If they were genuinely never issued we'd also appreciate understanding why, so we can note it for the auditors. Please let us know if you need any account details to look into this.\n\nWith thanks,\nHenrik Solberg\nFinancial Controller, Birkeland AS"
+      "body": "Hello,\n\nAs we approach our fiscal year end, our accounts team is reconciling all vendor invoices for the past twelve months and has found two gaps in the sequence: invoices for February and August do not appear to have been issued, or at least were not received at this end. Could you confirm whether these were generated, and if so resend them? If they were genuinely never issued we'd also appreciate understanding why, so we can note it for the auditors. Please let us know if you need any account details to look into this.\n\nWith thanks,\nHenrik Solberg\nFinancial Controller, Birkeland AS"
     },
     {
       "id": "technical-001",

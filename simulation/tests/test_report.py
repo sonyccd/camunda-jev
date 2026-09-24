@@ -73,38 +73,53 @@ class SummarizeTest(unittest.TestCase):
         ]
 
     def test_counts_every_outcome(self):
-        summary = summarize(self.observations, requested_rate=10.0, elapsed=6.0)
+        summary = summarize(self.observations, requested_rate=10.0, elapsed=6.0, feed_elapsed=0.6)
         for outcome in ("correct_route", "misroute", "overconfident",
                         "warranted_escalation", "wasted_escalation", "saved_escalation"):
             self.assertEqual(summary["outcomes"][outcome], 1, outcome)
 
     def test_rates_are_fractions_of_resolved(self):
-        summary = summarize(self.observations, requested_rate=10.0, elapsed=6.0)
+        summary = summarize(self.observations, requested_rate=10.0, elapsed=6.0, feed_elapsed=0.6)
         self.assertEqual(summary["resolved"], 6)
         self.assertAlmostEqual(summary["escalation_rate"], 3 / 6)
         self.assertAlmostEqual(summary["misroute_rate"], 1 / 6)
 
     def test_unresolved_are_counted_not_dropped(self):
         pending = Observation("x", "x", "billing", "s", 0.0, None, None, None, None, None, {})
-        summary = summarize(self.observations + [pending], requested_rate=10.0, elapsed=6.0)
+        summary = summarize(self.observations + [pending], requested_rate=10.0, elapsed=6.0,
+                             feed_elapsed=0.7)
         self.assertEqual(summary["unresolved"], 1)
         self.assertEqual(summary["resolved"], 6)
 
-    def test_achieved_throughput_uses_elapsed_time(self):
-        summary = summarize(self.observations, requested_rate=10.0, elapsed=3.0)
-        self.assertAlmostEqual(summary["achieved_rate"], 6 / 3.0)
+    def test_send_rate_is_measured_over_the_feed_phase_only(self):
+        # The point of the split: 6 sent in 0.6s is 10/s, exactly as requested,
+        # even though resolutions trickle in over the 3s that includes polling.
+        summary = summarize(self.observations, requested_rate=10.0, elapsed=3.0, feed_elapsed=0.6)
+        self.assertAlmostEqual(summary["achieved_send_rate"], 10.0)
         self.assertEqual(summary["requested_rate"], 10.0)
 
+    def test_resolution_rate_is_measured_over_the_whole_run(self):
+        summary = summarize(self.observations, requested_rate=10.0, elapsed=3.0, feed_elapsed=0.6)
+        self.assertAlmostEqual(summary["resolution_rate"], 6 / 3.0)
+        self.assertAlmostEqual(summary["feed_elapsed"], 0.6)
+        self.assertAlmostEqual(summary["elapsed"], 3.0)
+
+    def test_send_rate_counts_unresolved_sends_too(self):
+        pending = Observation("x", "x", "billing", "s", 0.0, None, None, None, None, None, {})
+        summary = summarize(self.observations + [pending], requested_rate=10.0,
+                            elapsed=3.0, feed_elapsed=0.7)
+        self.assertAlmostEqual(summary["achieved_send_rate"], 7 / 0.7)
+
     def test_latency_percentiles_are_reported(self):
-        summary = summarize(self.observations, requested_rate=10.0, elapsed=6.0)
+        summary = summarize(self.observations, requested_rate=10.0, elapsed=6.0, feed_elapsed=0.6)
         self.assertAlmostEqual(summary["latency_ms"]["p50"], 500.0)
 
     def test_confusion_matrix_counts_expected_against_pick(self):
-        summary = summarize(self.observations, requested_rate=10.0, elapsed=6.0)
+        summary = summarize(self.observations, requested_rate=10.0, elapsed=6.0, feed_elapsed=0.6)
         self.assertEqual(summary["confusion"][("technical", "sales")], 1)
 
     def test_empty_input_does_not_divide_by_zero(self):
-        summary = summarize([], requested_rate=1.0, elapsed=1.0)
+        summary = summarize([], requested_rate=1.0, elapsed=1.0, feed_elapsed=1.0)
         self.assertEqual(summary["resolved"], 0)
         self.assertEqual(summary["escalation_rate"], 0.0)
 
@@ -160,8 +175,27 @@ class OutputTest(unittest.TestCase):
         self.assertIn("outcome", lines[0])
         self.assertIn("jevChoice", lines[0])
 
+    def test_report_separates_send_rate_from_resolution_rate(self):
+        summary = summarize([obs("billing", True, "billing", 0.9)], 10.0, 5.0, 0.1)
+        text = format_report(summary, [], 2.0)
+        self.assertIn("achieved send", text)
+        self.assertIn("resolutions", text)
+        # One resolution in 5s must not be printed as the achieved send rate.
+        self.assertIn("10.0/s", text)
+        self.assertIn("0.2/s", text)
+
+    def test_report_survives_a_resolved_case_with_no_jev_choice(self):
+        # Resolved is observed_at + confidence; jevChoice may still be absent,
+        # and sorting the confusion matrix must not raise at print time.
+        no_choice = Observation("x", "x", "billing", "s", 0.0, 0.5, "undecided", False,
+                                None, 0.4, {})
+        summary = summarize([no_choice, obs("billing", True, "billing", 0.9)], 10.0, 1.0, 0.2)
+        text = format_report(summary, sweep([no_choice], [0.5]), 2.0)
+        self.assertIn("Confusion", text)
+        self.assertIn("none 1", text)
+
     def test_report_mentions_the_poll_interval_as_the_error_bound(self):
-        summary = summarize([obs("billing", True, "billing", 0.9)], 10.0, 1.0)
+        summary = summarize([obs("billing", True, "billing", 0.9)], 10.0, 1.0, 0.1)
         text = format_report(summary, sweep([obs("billing", True, "billing", 0.9)], [0.5]), 2.0)
         self.assertIn("2.0s", text)
         self.assertIn("escalation", text.lower())

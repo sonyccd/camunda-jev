@@ -7,10 +7,10 @@ import argparse
 import json
 import os
 import sys
+import threading
 import time
-import urllib.error
 import urllib.request
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from simulation.generator import generate, load_corpus
 from simulation.report import (
@@ -71,7 +71,9 @@ class CamundaClient:
             "%s/v2/process-instances" % self.base_url,
             {"processDefinitionId": process_id, "variables": variables},
         )
-        return result["processInstanceKey"]
+        # Normalised here so it matches the str() keys find_results returns; the
+        # API has been seen to send this field as both a string and a number.
+        return str(result["processInstanceKey"])
 
     def find_results(self, keys: List[str]) -> Dict[str, dict]:
         """Fetch jevResult for the given instances, in chunks.
@@ -95,56 +97,149 @@ class CamundaClient:
         return found
 
 
-def _run(args) -> int:
+def _resolve(observation: Observation, payload: dict, seen: float) -> Observation:
+    return Observation(
+        case_id=observation.case_id, corpus_id=observation.corpus_id,
+        expected=observation.expected, subject=observation.subject,
+        sent_at=observation.sent_at, observed_at=seen,
+        choice=payload.get("choice"), decided=payload.get("decided"),
+        jev_choice=payload.get("jevChoice"), confidence=payload.get("confidence"),
+        probabilities=payload.get("probabilities") or {},
+    )
+
+
+class Collector:
+    """Polls for results on a background thread, so polling never steals feed time.
+
+    Owns `pending` and `done` outright: the feed loop only calls `add`. The lock
+    is never held across `find_results`, which does network I/O.
+    """
+
+    def __init__(self, client: CamundaClient, poll_interval: float):
+        self._client = client
+        self._poll_interval = poll_interval
+        self._lock = threading.Lock()
+        self._stop = threading.Event()
+        self._pending: Dict[str, Observation] = {}
+        self._done: List[Observation] = []
+        self._thread: Optional[threading.Thread] = None
+
+    def add(self, key: str, observation: Observation) -> None:
+        with self._lock:
+            self._pending[key] = observation
+
+    def poll_once(self) -> None:
+        with self._lock:
+            keys = list(self._pending)
+        if not keys:
+            return
+        try:
+            results = self._client.find_results(keys)
+        except (OSError, ValueError, KeyError) as error:
+            # A failed poll must never kill the collector: the run would then
+            # report every later case as unresolved for no cluster-side reason.
+            print("  poll failed: %s" % error, file=sys.stderr)
+            return
+        seen = time.monotonic()
+        with self._lock:
+            # Re-read pending rather than trusting the snapshot: the feed loop
+            # may have added keys while the poll was in flight.
+            for key, payload in results.items():
+                observation = self._pending.pop(key, None)
+                if observation is not None:
+                    self._done.append(_resolve(observation, payload, seen))
+
+    def run(self) -> None:
+        while not self._stop.is_set():
+            self.poll_once()
+            # Event.wait, not sleep, so stop() takes effect at once rather than
+            # waiting out a whole poll interval.
+            self._stop.wait(self._poll_interval)
+
+    def start(self) -> None:
+        self._thread = threading.Thread(target=self.run, name="collector", daemon=True)
+        self._thread.start()
+
+    def stop(self, join_timeout: float = 5.0) -> None:
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join(timeout=join_timeout)
+            self._thread = None
+
+    @property
+    def pending_count(self) -> int:
+        with self._lock:
+            return len(self._pending)
+
+    def progress(self) -> Tuple[int, int]:
+        """(resolved, escalated) as one consistent snapshot for the progress line."""
+        with self._lock:
+            return len(self._done), sum(1 for o in self._done if o.choice == UNDECIDED)
+
+    def observations(self) -> List[Observation]:
+        """Everything fed, resolved and not. Unresolved entries are kept, never dropped."""
+        with self._lock:
+            return list(self._done) + list(self._pending.values())
+
+
+def _run(args, client: Optional[CamundaClient] = None) -> int:
     corpus_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "corpus.json")
     cases = generate(load_corpus(corpus_path), args.count, args.seed)
-    client = CamundaClient(args.base_url)
+    client = client or CamundaClient(args.base_url)
     limiter = RateLimiter(args.rate)
+    collector = Collector(client, args.poll_interval)
 
-    pending: Dict[str, Observation] = {}
-    observations: List[Observation] = []
     started = time.monotonic()
     failures = 0
 
     print("Feeding %d tickets at %.1f/s to %s" % (args.count, args.rate, args.base_url))
 
-    for index, case in enumerate(cases, start=1):
-        limiter.acquire()
-        variables = {
-            "ticket": {"subject": case.subject, "body": case.body},
-            "expected": case.expected,
-            "caseId": case.case_id,
-            "threshold": args.threshold,
-        }
-        try:
-            key = client.create_instance(PROCESS_ID, variables)
-        except (OSError, ValueError, KeyError) as error:
-            failures += 1
-            if failures <= 3:
-                print("  create failed: %s" % error, file=sys.stderr)
-            continue
+    collector.start()
+    try:
+        for index, case in enumerate(cases, start=1):
+            limiter.acquire()
+            variables = {
+                "ticket": {"subject": case.subject, "body": case.body},
+                "expected": case.expected,
+                "caseId": case.case_id,
+                "threshold": args.threshold,
+            }
+            try:
+                key = client.create_instance(PROCESS_ID, variables)
+            except (OSError, ValueError, KeyError) as error:
+                failures += 1
+                if failures <= 3:
+                    print("  create failed: %s" % error, file=sys.stderr)
+                continue
 
-        pending[key] = Observation(
-            case_id=case.case_id, corpus_id=case.corpus_id, expected=case.expected,
-            subject=case.subject, sent_at=time.monotonic(), observed_at=None,
-            choice=None, decided=None, jev_choice=None, confidence=None, probabilities={},
-        )
+            collector.add(
+                key,
+                Observation(
+                    case_id=case.case_id, corpus_id=case.corpus_id, expected=case.expected,
+                    subject=case.subject, sent_at=time.monotonic(), observed_at=None,
+                    choice=None, decided=None, jev_choice=None, confidence=None, probabilities={},
+                ),
+            )
 
-        if index % 25 == 0:
-            _drain(client, pending, observations)
-            _progress(index, args.count, observations, started)
+            if index % 25 == 0:
+                _progress(index, args.count, collector, started)
 
-    deadline = time.monotonic() + args.timeout
-    while pending and time.monotonic() < deadline:
-        time.sleep(args.poll_interval)
-        _drain(client, pending, observations)
-        _progress(args.count, args.count, observations, started)
+        # The feed phase ends here. Its duration is what the requested rate is
+        # answerable for; the polling tail that follows is not.
+        feed_elapsed = max(time.monotonic() - started, 1e-9)
 
-    observations.extend(pending.values())
+        deadline = time.monotonic() + args.timeout
+        while collector.pending_count and time.monotonic() < deadline:
+            time.sleep(min(0.5, args.poll_interval))
+            _progress(args.count, args.count, collector, started)
+    finally:
+        collector.stop()
+
+    observations = collector.observations()
     elapsed = time.monotonic() - started
 
     print("\n")
-    summary = summarize(observations, args.rate, elapsed)
+    summary = summarize(observations, args.rate, elapsed, feed_elapsed)
     print(format_report(summary, sweep(observations, default_thresholds()), args.poll_interval))
 
     if failures:
@@ -155,37 +250,12 @@ def _run(args) -> int:
     return 0
 
 
-def _drain(client: CamundaClient, pending: Dict[str, Observation], done: List[Observation]) -> None:
-    if not pending:
-        return
-    try:
-        results = client.find_results(list(pending.keys()))
-    except (OSError, ValueError, KeyError) as error:
-        print("  poll failed: %s" % error, file=sys.stderr)
-        return
-    seen = time.monotonic()
-    for key, payload in results.items():
-        observation = pending.pop(key, None)
-        if observation is None:
-            continue
-        done.append(
-            Observation(
-                case_id=observation.case_id, corpus_id=observation.corpus_id,
-                expected=observation.expected, subject=observation.subject,
-                sent_at=observation.sent_at, observed_at=seen,
-                choice=payload.get("choice"), decided=payload.get("decided"),
-                jev_choice=payload.get("jevChoice"), confidence=payload.get("confidence"),
-                probabilities=payload.get("probabilities") or {},
-            )
-        )
-
-
-def _progress(sent: int, total: int, done: List[Observation], started: float) -> None:
+def _progress(sent: int, total: int, collector: Collector, started: float) -> None:
     elapsed = max(time.monotonic() - started, 1e-6)
-    escalated = sum(1 for o in done if o.choice == UNDECIDED)
+    resolved, escalated = collector.progress()
     sys.stdout.write(
         "\r  sent %d/%d   resolved %d   escalated %d   %.1f/s   "
-        % (sent, total, len(done), escalated, len(done) / elapsed)
+        % (sent, total, resolved, escalated, resolved / elapsed)
     )
     sys.stdout.flush()
 
