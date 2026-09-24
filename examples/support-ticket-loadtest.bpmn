@@ -40,6 +40,8 @@
       <bpmn:outgoing>Flow_ToGateway</bpmn:outgoing>
     </bpmn:serviceTask>
 
+    <!-- No default flow: a `choice` outside billing/technical/sales/undecided
+         should raise an incident rather than silently taking a fallback path. -->
     <bpmn:exclusiveGateway id="Gateway_Route" name="Which team?">
       <bpmn:incoming>Flow_ToGateway</bpmn:incoming>
       <bpmn:outgoing>Flow_Billing</bpmn:outgoing>

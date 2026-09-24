@@ -7,8 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.jupiter.api.Test;
@@ -199,5 +201,42 @@ class ArtifactsTest {
     }
     // Set per run by the feeder, never hard-coded in the diagram.
     assertThat(thresholdSource).isEqualTo("=threshold");
+  }
+
+  @Test
+  void loadTestProcessGatewayFlowsReachTheCorrectDestination() throws Exception {
+    // Condition text and element counts alone don't prove the wiring is right: a
+    // diagram with the right four condition strings but crossed targetRefs (e.g.
+    // "billing" routed to End_Sales) would still pass the other two tests.
+    var factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    var document = factory.newDocumentBuilder().parse(LOADTEST.toFile());
+
+    NodeList flows =
+        document.getElementsByTagNameNS(
+            "http://www.omg.org/spec/BPMN/20100524/MODEL", "sequenceFlow");
+    Map<String, String> conditionToTarget = new HashMap<>();
+    Map<String, String> conditionToSource = new HashMap<>();
+    for (int i = 0; i < flows.getLength(); i++) {
+      Element flow = (Element) flows.item(i);
+      NodeList expressions =
+          flow.getElementsByTagNameNS(
+              "http://www.omg.org/spec/BPMN/20100524/MODEL", "conditionExpression");
+      if (expressions.getLength() == 0) {
+        continue;
+      }
+      String condition = expressions.item(0).getTextContent().trim();
+      conditionToTarget.put(condition, flow.getAttribute("targetRef"));
+      conditionToSource.put(condition, flow.getAttribute("sourceRef"));
+    }
+
+    assertThat(conditionToTarget)
+        .containsEntry("=jevResult.choice = \"billing\"", "End_Billing")
+        .containsEntry("=jevResult.choice = \"technical\"", "End_Technical")
+        .containsEntry("=jevResult.choice = \"sales\"", "End_Sales")
+        .containsEntry("=jevResult.choice = \"undecided\"", "Task_HumanReview");
+
+    // None of these conditional flows may be re-parented off the gateway.
+    assertThat(conditionToSource.values()).allMatch("Gateway_Route"::equals);
   }
 }
