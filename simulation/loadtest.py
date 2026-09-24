@@ -118,7 +118,7 @@ def _run(args) -> int:
         }
         try:
             key = client.create_instance(PROCESS_ID, variables)
-        except (urllib.error.URLError, KeyError) as error:
+        except (OSError, ValueError, KeyError) as error:
             failures += 1
             if failures <= 3:
                 print("  create failed: %s" % error, file=sys.stderr)
@@ -158,7 +158,11 @@ def _run(args) -> int:
 def _drain(client: CamundaClient, pending: Dict[str, Observation], done: List[Observation]) -> None:
     if not pending:
         return
-    results = client.find_results(list(pending.keys()))
+    try:
+        results = client.find_results(list(pending.keys()))
+    except (OSError, ValueError, KeyError) as error:
+        print("  poll failed: %s" % error, file=sys.stderr)
+        return
     seen = time.monotonic()
     for key, payload in results.items():
         observation = pending.pop(key, None)

@@ -1,6 +1,7 @@
 import unittest
 
-from simulation.loadtest import CamundaClient, RateLimiter
+from simulation.loadtest import CamundaClient, RateLimiter, _drain
+from simulation.report import Observation, summarize
 
 
 class FakeClock:
@@ -100,6 +101,75 @@ class CamundaClientTest(unittest.TestCase):
         client = CamundaClient("http://c:8080", post=post)
         self.assertEqual(client.find_results([]), {})
         self.assertEqual(post.calls, [])
+
+
+def _pending_observation(case_id):
+    return Observation(
+        case_id=case_id, corpus_id="c-1", expected="billing",
+        subject="s", sent_at=0.0, observed_at=None,
+        choice=None, decided=None, jev_choice=None, confidence=None, probabilities={},
+    )
+
+
+class DrainTest(unittest.TestCase):
+    def test_drain_moves_a_resolved_instance_from_pending_to_done(self):
+        post = RecordingPost([{
+            "items": [{
+                "processInstanceKey": "1",
+                "value": (
+                    '{"choice":"billing","decided":true,"jevChoice":"billing",'
+                    '"confidence":0.9,'
+                    '"probabilities":{"billing":0.9,"technical":0.05,"sales":0.05}}'
+                ),
+            }]
+        }])
+        client = CamundaClient("http://c:8080", post=post)
+        pending = {"1": _pending_observation("a#1"), "2": _pending_observation("a#2")}
+        done = []
+
+        _drain(client, pending, done)
+
+        self.assertEqual(list(pending.keys()), ["2"])
+        self.assertEqual(len(done), 1)
+        resolved = done[0]
+        self.assertEqual(resolved.case_id, "a#1")
+        self.assertEqual(resolved.choice, "billing")
+        self.assertTrue(resolved.decided)
+        self.assertEqual(resolved.jev_choice, "billing")
+        self.assertEqual(resolved.confidence, 0.9)
+        self.assertEqual(
+            resolved.probabilities,
+            {"billing": 0.9, "technical": 0.05, "sales": 0.05},
+        )
+
+    def test_drain_tolerates_a_find_results_that_raises(self):
+        def raising_post(url, payload):
+            raise ValueError("bad json")
+
+        client = CamundaClient("http://c:8080", post=raising_post)
+        pending = {"1": _pending_observation("a#1")}
+        done = []
+
+        _drain(client, pending, done)
+
+        self.assertEqual(list(pending.keys()), ["1"])
+        self.assertEqual(done, [])
+
+
+class TimeoutPreservesPendingTest(unittest.TestCase):
+    def test_timeout_path_preserves_unresolved_entries(self):
+        pending = {"1": _pending_observation("a#1")}
+        observations = []
+
+        observations.extend(pending.values())
+
+        self.assertEqual(len(observations), 1)
+        self.assertFalse(observations[0].resolved)
+
+        summary = summarize(observations, requested_rate=10.0, elapsed=1.0)
+        self.assertEqual(summary["sent"], 1)
+        self.assertEqual(summary["resolved"], 0)
+        self.assertEqual(summary["unresolved"], 1)
 
 
 if __name__ == "__main__":
