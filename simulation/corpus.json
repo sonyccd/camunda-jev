@@ -1,0 +1,725 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "billing-001",
+      "expected": "billing",
+      "subject": "Charged twice for March",
+      "body": "Hi there,\n\nWe've just been going through the card statement and it looks like invoice 4471 was taken twice on the 3rd. Same amount, same reference. Could you take a look and refund the duplicate?\n\nThanks,\nPriya"
+    },
+    {
+      "id": "billing-002",
+      "expected": "billing",
+      "subject": "VAT number on invoices",
+      "body": "can you add our VAT number to future invoices please"
+    },
+    {
+      "id": "billing-003",
+      "expected": "billing",
+      "subject": "duplicate charge again",
+      "body": "this is the second time this has happened. two charges of 89.00 on the 14th. fix it and refund one please"
+    },
+    {
+      "id": "billing-004",
+      "expected": "billing",
+      "subject": "Refund after cancellation",
+      "body": "Hello,\n\nI cancelled our subscription on the 2nd but we were still billed for the full month on the 5th. I understand a small overlap is normal but this was the entire monthly fee. Could someone confirm whether a partial refund is coming, and if so when?\n\nRegards,\nDavid Okoye"
+    },
+    {
+      "id": "billing-005",
+      "expected": "billing",
+      "subject": "PO number missing from invoice",
+      "body": "Our finance team has flagged that invoice INV-2291 doesn't have our purchase order number on it, and they won't process payment without it. PO is 48871-B. Could you reissue with that added, or let me know if I need to send it a different way?"
+    },
+    {
+      "id": "billing-006",
+      "expected": "billing",
+      "subject": "not happy about the price going up",
+      "body": "so I just got the renewal notice and the price has gone up almost 40% from last year with basically no explanation. we've been customers for three years and nobody reached out about this beforehand, it was just sprung on us in the invoice. I get that costs go up but that's a huge jump and I'd like to understand where it's coming from before we just quietly renew at that rate. is there someone who can walk me through the pricing changes, and is there any flexibility given how long we've been with you?"
+    },
+    {
+      "id": "billing-007",
+      "expected": "billing",
+      "subject": "wrong currency on invoice",
+      "body": "Our last two invoices have been in USD but our contract is in GBP. Can this be corrected? The FX difference is small but our accountant needs everything in one currency for reconciliation."
+    },
+    {
+      "id": "billing-008",
+      "expected": "billing",
+      "subject": "Need annual invoice for finance dept",
+      "body": "Good afternoon,\n\nOur finance department requires a single consolidated invoice covering the full annual term rather than the monthly breakdown we're currently receiving, for internal reporting purposes. Would it be possible to arrange this going forward, and could you also resend the last two months in that format if that's not too much trouble?\n\nMany thanks,\nElena Marchetti\nAccounts, Solvane Group"
+    },
+    {
+      "id": "billing-009",
+      "expected": "billing",
+      "subject": "card declined, need to update payment method",
+      "body": "my card on file expired and I can't find where to update it in the account settings, it just spins"
+    },
+    {
+      "id": "billing-010",
+      "expected": "billing",
+      "subject": "Prorated credit after downgrade",
+      "body": "We downgraded from the Growth plan to Starter last week. I was expecting a prorated credit for the unused portion of Growth to show up but I don't see anything on the account. Is that automatic or does it need to be requested?"
+    },
+    {
+      "id": "billing-011",
+      "expected": "billing",
+      "subject": "invoice",
+      "body": "can u send me last months invoice, need it for expenses"
+    },
+    {
+      "id": "billing-012",
+      "expected": "billing",
+      "subject": "This is unacceptable - third billing error",
+      "body": "I am extremely frustrated. This is the THIRD time in four months that we've been billed incorrectly. First it was double billing, then it was billing for seats we'd removed, and now we've been charged the full annual rate despite being on a monthly plan. Every time I have to chase this up myself and every time I'm told it's 'a one-off system error.' At this point I'm looking at disputing the charge with our bank because I don't have confidence it'll be fixed otherwise. I need someone senior to look at our account and tell me why this keeps happening, and I want the current overcharge reversed today, not in the usual 5-7 business days."
+    },
+    {
+      "id": "billing-013",
+      "expected": "billing",
+      "subject": "Closing our account - refund for unused period",
+      "body": "We're shutting down this project and won't be renewing. We paid annually in March so there are about seven months left on the term. Is any portion of that refundable, or is the annual plan strictly non-refundable? Just want to know before I tell my boss what to expect."
+    },
+    {
+      "id": "billing-014",
+      "expected": "billing",
+      "subject": "discount code SPRING20 not applied",
+      "body": "Tried the SPRING20 code at checkout and the total didn't change at all, still shows full price. Screenshot attached. Can you either apply it manually or tell me why it didn't work?"
+    },
+    {
+      "id": "billing-015",
+      "expected": "billing",
+      "subject": "Uploading tax exemption certificate",
+      "body": "Hi, we're a registered non-profit and should be exempt from sales tax. Where do I upload our exemption certificate, and will past invoices be adjusted once it's on file or only future ones?"
+    },
+    {
+      "id": "billing-016",
+      "expected": "billing",
+      "subject": "billed for 40 seats, we only have 31",
+      "body": "Morning,\n\nWe removed 9 seats back in June when a few contractors rolled off, but this month's invoice still shows 40 seats billed. Could someone check the account and correct both this invoice and refund the difference for the months we were overcharged since June?\n\nThanks,\nSam"
+    },
+    {
+      "id": "billing-017",
+      "expected": "billing",
+      "subject": "subscription renewed without warning",
+      "body": "I thought I'd cancelled this back in January but it just auto-renewed for another full year and charged the card. I definitely remember clicking cancel. Can this be refunded and actually cancelled this time?"
+    },
+    {
+      "id": "billing-018",
+      "expected": "billing",
+      "subject": "Missing invoice for Q2, needed for audit",
+      "body": "We're being audited and I can't locate the invoice for April-June anywhere, it's not in the portal and I don't see it in my inbox either. Could you resend it as a PDF to this address? Fairly urgent, the auditors want it by Friday."
+    },
+    {
+      "id": "billing-019",
+      "expected": "billing",
+      "subject": "Update to billing contact",
+      "body": "Please could you update the billing contact on our account from myself to our new finance manager, Rebecca Lin (rebecca.lin@northfair.example)? All future invoices and payment reminders should go to her going forward. Happy to confirm this by phone if you need verification.\n\nKind regards,\nAndrew Pell"
+    },
+    {
+      "id": "billing-020",
+      "expected": "billing",
+      "subject": "Overcharged after mid-cycle plan change",
+      "body": "We upgraded plans on the 10th, partway through our billing cycle. The invoice that came through charged us the full new-plan price for the whole month rather than a blended rate. Is that expected or is this a proration bug? Either way the amount seems too high."
+    },
+    {
+      "id": "billing-021",
+      "expected": "billing",
+      "subject": "wtf another double charge",
+      "body": "yall charged me twice again this is getting ridiculous, refund it"
+    },
+    {
+      "id": "billing-022",
+      "expected": "billing",
+      "subject": "New billing entity after restructure",
+      "body": "Hello,\n\nAs part of an internal restructure, the entity that should be invoiced for our subscription is changing from Halden Retail Ltd to Halden Group Holdings Ltd, effective the start of next month. The registered address and VAT number are also changing. Could you let me know what you need from us to update this cleanly, and whether it will affect the continuity of our current contract terms or pricing? We'd like this handled before the next billing date if at all possible.\n\nBest regards,\nMarianne Fouquet\nFinance Director"
+    },
+    {
+      "id": "billing-023",
+      "expected": "billing",
+      "subject": "last quarter's invoice missing",
+      "body": "accountant is asking for last quarter's invoice and I can't find it anywhere in the portal, can you resend"
+    },
+    {
+      "id": "billing-024",
+      "expected": "billing",
+      "subject": "Still waiting on the refund from last week",
+      "body": "Following up again - I was told on Tuesday that the refund for the duplicate charge would land in 3-5 business days. It's now been eight and there's nothing on the statement. Can someone actually confirm it's been processed, and if not, why not?"
+    },
+    {
+      "id": "billing-025",
+      "expected": "billing",
+      "subject": "wrong VAT rate on invoice",
+      "body": "The last invoice applied 20% VAT but we're based in a region where it should be 0% reverse-charged, same as every previous invoice. Could this one be corrected and reissued?"
+    },
+    {
+      "id": "billing-026",
+      "expected": "billing",
+      "subject": "Confused about payment method expiring notice",
+      "body": "Got an email saying our payment method is expiring soon but the card on file doesn't expire until 2028 as far as I know. Is this notice a mistake, or is there something else going on with the card you have on record?"
+    },
+    {
+      "id": "billing-027",
+      "expected": "billing",
+      "subject": "Itemized breakdown of invoice needed",
+      "body": "Could I get an itemized breakdown of invoice 5560? It just shows one lump sum but we need to see how much was seats vs add-ons vs usage overage for our internal cost allocation."
+    },
+    {
+      "id": "billing-028",
+      "expected": "billing",
+      "subject": "Switching from monthly to annual billing",
+      "body": "We'd like to move from monthly to annual billing to get the discount mentioned on your pricing page. What's the process, and will it take effect immediately or at the next renewal date?"
+    },
+    {
+      "id": "billing-029",
+      "expected": "billing",
+      "subject": "Currency conversion fees eating into the discount",
+      "body": "Hi,\n\nI wanted to flag something about how we're being charged. Our contract is priced in USD but our card is issued in a different currency, and between the exchange rate our bank applies and what looks like an additional conversion fee on your end, the amount we actually pay is noticeably higher than the USD figure quoted, enough that it's basically wiped out the annual discount we signed up for. Is there a way to be billed in our local currency instead, or is this just an unavoidable cost of the USD contract? Would appreciate some clarity so we can budget properly next year.\n\nThanks,\nOskar"
+    },
+    {
+      "id": "billing-030",
+      "expected": "billing",
+      "subject": "Refund promised three weeks ago",
+      "body": "I was told by your team three weeks ago, over chat, that a refund of 214.00 for a billing error would be processed within 10 business days. That was 21 days ago now and I've heard nothing further and the money hasn't shown up. I've got the chat transcript if it's needed. At this point I'd just like a clear answer on whether this is actually happening, and if it is, an actual date, because I've been given vague reassurances twice now and it hasn't gone anywhere."
+    },
+    {
+      "id": "billing-031",
+      "expected": "billing",
+      "subject": "Can't update card, link errors out",
+      "body": "The 'update payment method' link in the billing settings just throws a blank white page when I click it, tried on two different browsers. Can you update the card on file manually instead? Here's the new expiry date, I'll call to give the number securely."
+    },
+    {
+      "id": "billing-032",
+      "expected": "billing",
+      "subject": "Billed at old rate but downgrade already applied",
+      "body": "We downgraded plans two weeks ago and the account clearly shows the lower plan now, but this month's invoice still charged the old, higher rate. Can this be corrected before it's paid?"
+    },
+    {
+      "id": "billing-033",
+      "expected": "billing",
+      "subject": "copy of march invoice",
+      "body": "can I get a copy of the March invoice, need it for expenses report"
+    },
+    {
+      "id": "billing-034",
+      "expected": "billing",
+      "subject": "Year-end invoice reconciliation",
+      "body": "Dear Billing Team,\n\nAs we approach our fiscal year end, our accounts team is reconciling all vendor invoices for the past twelve months and has found two gaps in the sequence: invoices for February and August do not appear to have been issued, or at least were not received at this end. Could you confirm whether these were generated, and if so resend them? If they were genuinely never issued we'd also appreciate understanding why, so we can note it for the auditors. Please let us know if you need any account details to look into this.\n\nWith thanks,\nHenrik Solberg\nFinancial Controller, Birkeland AS"
+    },
+    {
+      "id": "technical-001",
+      "expected": "technical",
+      "subject": "webhooks stopped firing",
+      "body": "our webhooks just stopped. nothing since about 2am. endpoint is up, we can curl it fine. nothing in your status page either?"
+    },
+    {
+      "id": "technical-002",
+      "expected": "technical",
+      "subject": "500 errors on export endpoint",
+      "body": "Getting consistent 500 errors calling POST /v2/exports since this morning, worked fine yesterday. Request body unchanged. Trace ID: 8f2a-91c. Any idea what changed?"
+    },
+    {
+      "id": "technical-003",
+      "expected": "technical",
+      "subject": "cant log in",
+      "body": "keeps saying invalid password but i know its right, reset it twice already still nothing"
+    },
+    {
+      "id": "technical-004",
+      "expected": "technical",
+      "subject": "SSO broken after IdP change",
+      "body": "We switched identity providers last week and now nobody in the org can log in via SSO, they just get bounced back to the login page with no error message. Non-SSO accounts still work fine. We've re-uploaded the new metadata XML but it hasn't helped."
+    },
+    {
+      "id": "technical-005",
+      "expected": "technical",
+      "subject": "dashboard extremely slow today",
+      "body": "Dashboard has been taking 20-30 seconds to load any page since about 9am our time, normally it's near-instant. Same on different browsers and networks on our end so I don't think it's us."
+    },
+    {
+      "id": "technical-006",
+      "expected": "technical",
+      "subject": "integration broke after your update",
+      "body": "Hi,\n\nOur Zapier integration with your platform stopped passing the 'customer_tier' field sometime in the last 24 hours - it's coming through blank on every record now, even for customers where it's definitely set correctly in your system. We didn't change anything on our side. Looking at the changelog it looks like there was a field naming update pushed yesterday, is that related? If so is there a mapping we need to update, or is this something that needs fixing on your end?\n\nThanks,\nJoanna"
+    },
+    {
+      "id": "technical-007",
+      "expected": "technical",
+      "subject": "rate limited constantly",
+      "body": "We're hitting 429s on basically every third request even though our usage is well under the documented limit for our plan. Is the documented limit out of date, or is something misconfigured on the account?"
+    },
+    {
+      "id": "technical-008",
+      "expected": "technical",
+      "subject": "ssl cert expired?",
+      "body": "getting a cert error hitting your api since this morning, says expired yesterday. known issue?"
+    },
+    {
+      "id": "technical-009",
+      "expected": "technical",
+      "subject": "mobile app crashes on open",
+      "body": "The iOS app crashes immediately on launch since updating to the latest version yesterday. Force quitting and reopening doesn't help, tried reinstalling too, same thing. iPhone 13, iOS 17."
+    },
+    {
+      "id": "technical-010",
+      "expected": "technical",
+      "subject": "records not syncing to CRM",
+      "body": "New leads created in the form haven't synced over to our CRM since Tuesday. Checked the integration settings and the connection still shows as active/green. Nothing in an error log that I can find on our side. About 40 leads are missing at this point and growing."
+    },
+    {
+      "id": "technical-011",
+      "expected": "technical",
+      "subject": "wrong timestamps",
+      "body": "all the timestamps in the exported CSV are showing UTC+0 even though our account timezone is set to UTC-5, was working correctly last month"
+    },
+    {
+      "id": "technical-012",
+      "expected": "technical",
+      "subject": "email notifications not sending",
+      "body": "Task assignment emails stopped going out to my team about a week ago. In-app notifications still work fine, it's just the email ones. Checked spam, nothing there. Notification settings look unchanged from before."
+    },
+    {
+      "id": "technical-013",
+      "expected": "technical",
+      "subject": "cant upload files over 10mb",
+      "body": "any file over roughly 10mb fails to upload, just spins and then times out with a generic error. smaller files are totally fine"
+    },
+    {
+      "id": "technical-014",
+      "expected": "technical",
+      "subject": "Duplicate records being created",
+      "body": "Every time a form is submitted through the widget it's creating two identical contact records instead of one. Started noticing it three days ago, checked and it happens consistently, every single submission, not intermittent."
+    },
+    {
+      "id": "technical-015",
+      "expected": "technical",
+      "subject": "search returning nothing",
+      "body": "Search has stopped returning any results at all today, even for things I know exist and could find yesterday, like exact matches on a ticket number. Just shows 'no results' every time."
+    },
+    {
+      "id": "technical-016",
+      "expected": "technical",
+      "subject": "API key won't rotate",
+      "body": "Trying to rotate our API key from the settings page, the new key generates fine but requests using it get 401'd, while the old key I'm trying to retire still works. Rotation seems to be doing the opposite of what it should."
+    },
+    {
+      "id": "technical-017",
+      "expected": "technical",
+      "subject": "csv import failing silently",
+      "body": "Uploading our usual CSV for bulk import, it says 'processing' for a few seconds and then the page just goes back to normal with no confirmation and no error, and none of the rows show up. No error message anywhere to go on."
+    },
+    {
+      "id": "technical-018",
+      "expected": "technical",
+      "subject": "calendar sync stopped",
+      "body": "Two-way calendar sync with Google Calendar has stopped working, events created on our side aren't showing up on Google and vice versa. Was working fine until sometime yesterday afternoon, best I can tell."
+    },
+    {
+      "id": "technical-019",
+      "expected": "technical",
+      "subject": "permission errors for team members",
+      "body": "Two people on my team who should have edit access are getting 'you don't have permission to view this' on projects they're clearly members of. I can see them listed as members with the right role from my side, and re-inviting them doesn't change anything."
+    },
+    {
+      "id": "technical-020",
+      "expected": "technical",
+      "subject": "broken pagination on reports page",
+      "body": "Clicking 'next page' on the reports list just reloads the same first page every time, can't get past page 1 no matter how many results there should be. Happens on Chrome and Firefox both."
+    },
+    {
+      "id": "technical-021",
+      "expected": "technical",
+      "subject": "app is basically unusable rn",
+      "body": "Genuinely at the end of my patience with this. Every single action I take - clicking into a record, saving a change, even just switching tabs - takes upwards of ten seconds and half the time just spins forever and I have to refresh. This has been going on for two days straight now and it's completely killing our team's productivity, we've had to fall back to spreadsheets for anything urgent. I've cleared cache, tried incognito, tried a different machine entirely, nothing changes. Is there a known outage or degradation happening right now, and if so is there an ETA, because we cannot keep operating like this."
+    },
+    {
+      "id": "technical-022",
+      "expected": "technical",
+      "subject": "dark mode text unreadable",
+      "body": "small bug - in dark mode the text in the settings dropdown is dark grey on black background, basically invisible. light mode is fine"
+    },
+    {
+      "id": "technical-023",
+      "expected": "technical",
+      "subject": "memory leak causing browser to crash",
+      "body": "Leaving a dashboard tab open for a few hours causes the whole browser to slow to a crawl and eventually crash the tab, memory usage in task manager climbs steadily the whole time it's open, doesn't happen with other sites open similarly long."
+    },
+    {
+      "id": "technical-024",
+      "expected": "technical",
+      "subject": "cannot reset password, no email arrives",
+      "body": "Requested a password reset four times now over the last hour, nothing shows up in inbox or spam. Account definitely exists since it says 'if this email is registered' style message and I can see the account referenced elsewhere."
+    },
+    {
+      "id": "technical-025",
+      "expected": "technical",
+      "subject": "API docs example doesn't work as written",
+      "body": "The example curl request in the 'creating a subscription' docs page returns a 400 'missing required field: plan_id' error when copy-pasted exactly as shown, but the example doesn't include a plan_id field at all. Either the docs are missing a field or the field shouldn't be required, but as it stands the example just doesn't work."
+    },
+    {
+      "id": "technical-026",
+      "expected": "technical",
+      "subject": "browser extension conflict maybe?",
+      "body": "Noticing that with our company's security extension enabled, certain buttons on your site just don't respond to clicks at all, no console errors that I can see. Disabling the extension fixes it immediately. Not sure if this is something you can do anything about but flagging in case others hit the same thing."
+    },
+    {
+      "id": "technical-027",
+      "expected": "technical",
+      "subject": "attachments missing after migration",
+      "body": "We ran the workspace migration tool last night as instructed. Everything moved over except attachments on older records, roughly anything from before this year seems to have lost its files, the record is there but the attachment section is empty."
+    },
+    {
+      "id": "technical-028",
+      "expected": "technical",
+      "subject": "two factor locked me out",
+      "body": "lost my phone so I can't get the 2fa code anymore, is there a way to get back into my account without it, its urgent I need to access something today"
+    },
+    {
+      "id": "technical-029",
+      "expected": "technical",
+      "subject": "export times out on large accounts",
+      "body": "Full data export has failed with a timeout every time I've tried it this week, we have a fairly large account (around 60k records) so I suspect it's a scale issue, worked fine a couple months ago when we had maybe half that many records."
+    },
+    {
+      "id": "technical-030",
+      "expected": "technical",
+      "subject": "Persistent 502 errors from the API gateway",
+      "body": "Good afternoon,\n\nOver the past 48 hours we've seen an intermittent but recurring pattern of 502 Bad Gateway responses from your API, affecting roughly 3-5% of requests across all our endpoints, not concentrated on any particular route. Retrying the same request immediately afterward usually succeeds, which suggests something transient on your infrastructure rather than an issue with our payloads. We've attached a sample of request IDs and timestamps from our logs covering a two-hour window this morning. Given the volume of traffic we run through this integration, even a low percentage failure rate translates to a meaningful number of failed customer-facing actions on our end, so we'd appreciate this being looked at with some urgency. Happy to provide further diagnostics if useful.\n\nBest,\nThe engineering team at Ferrow Logistics"
+    },
+    {
+      "id": "technical-031",
+      "expected": "technical",
+      "subject": "typo in error message",
+      "body": "minor thing but the error toast when a field is required says 'This filed is required' - missing an 'e' in field"
+    },
+    {
+      "id": "technical-032",
+      "expected": "technical",
+      "subject": "cant delete old workspace",
+      "body": "trying to delete an old test workspace we don't need anymore, the delete button just spins and nothing happens, no error shown either, tried a few times over the last two days"
+    },
+    {
+      "id": "technical-033",
+      "expected": "technical",
+      "subject": "Data inconsistent between app and API",
+      "body": "The count of active users shown in the dashboard UI (142) doesn't match what the /users endpoint returns when I filter for status=active (137). Not sure which is correct but they should obviously agree. This is affecting a report I need to send out today."
+    },
+    {
+      "id": "technical-034",
+      "expected": "technical",
+      "subject": "Webhook signature verification failing intermittently",
+      "body": "We verify incoming webhook signatures against the shared secret as documented, and it's been working for months, but starting yesterday roughly 1 in 10 webhooks fail verification even though we haven't touched our secret or the verification code. Wondering if there's some rotation or delivery issue on your side, since the failure rate is too consistent to be random noise, but not total enough to suggest a config problem here."
+    },
+    {
+      "id": "sales-001",
+      "expected": "sales",
+      "subject": "Adding 12 seats before end of quarter",
+      "body": "Morning — we're onboarding a new team and need another twelve seats added before the end of the quarter. Can you send over pricing for that, and confirm whether it's prorated against our current term? Happy to jump on a call if that's easier.\n\nBest,\nTom Whitfield\nOperations, Marlow & Co"
+    },
+    {
+      "id": "sales-002",
+      "expected": "sales",
+      "subject": "enterprise plan pricing",
+      "body": "hi, could someone send pricing for the enterprise tier, roughly 200 seats? thanks"
+    },
+    {
+      "id": "sales-003",
+      "expected": "sales",
+      "subject": "Book a demo",
+      "body": "We're evaluating a few tools in this space for our support team of about 15 people. Would it be possible to get a demo this week or next?"
+    },
+    {
+      "id": "sales-004",
+      "expected": "sales",
+      "subject": "Non-profit discount available?",
+      "body": "We're a registered charity looking at your platform for our volunteer coordination. Do you offer any kind of non-profit or charity discount? Happy to send over registration documents if needed."
+    },
+    {
+      "id": "sales-005",
+      "expected": "sales",
+      "subject": "Reseller partnership",
+      "body": "Hello,\n\nWe run an agency that implements tools like yours for our clients and would like to explore becoming an official reseller or implementation partner. Could you point me to the right person or team to discuss this with, and let me know what the typical process looks like?\n\nRegards,\nCarla Nunes"
+    },
+    {
+      "id": "sales-006",
+      "expected": "sales",
+      "subject": "comparing your plans",
+      "body": "trying to work out which plan we actually need, whats the real difference between growth and professional besides seat count? the comparison table on the site isnt super clear"
+    },
+    {
+      "id": "sales-007",
+      "expected": "sales",
+      "subject": "Custom contract terms for large deployment",
+      "body": "We're looking at a fairly large rollout, around 500 users across three regions, and our legal and procurement teams will need to review a custom master services agreement rather than the standard terms. Is that something you're able to accommodate, and if so who would lead that on your side?"
+    },
+    {
+      "id": "sales-008",
+      "expected": "sales",
+      "subject": "security questionnaire before we can proceed",
+      "body": "Before we can move forward with a purchase our security team requires a completed vendor security questionnaire, we've attached our standard template. Is there someone who handles these, and roughly how long does turnaround usually take? We're hoping to close this by end of quarter."
+    },
+    {
+      "id": "sales-009",
+      "expected": "sales",
+      "subject": "multi year deal",
+      "body": "we're happy with the product so far and would rather lock in a 3 year term if there's meaningful pricing benefit to doing that instead of renewing annually, can someone put a proposal together"
+    },
+    {
+      "id": "sales-010",
+      "expected": "sales",
+      "subject": "does the enterprise plan include the analytics module?",
+      "body": "Quick one before we sign - is the advanced analytics module bundled into the enterprise plan, or is that a separate add-on regardless of tier? Trying to finalize our budget for next year."
+    },
+    {
+      "id": "sales-011",
+      "expected": "sales",
+      "subject": "extending our trial",
+      "body": "Our trial ends Friday but the two people who need to sign off are both out this week. Any chance of a short extension, maybe another two weeks, so they can actually see it before we decide?"
+    },
+    {
+      "id": "sales-012",
+      "expected": "sales",
+      "subject": "volume pricing for 300+ seats",
+      "body": "Looking at rolling this out company-wide, that's somewhere north of 300 seats. Is there a volume pricing tier beyond what's listed publicly, or is the per-seat rate flat regardless of scale?"
+    },
+    {
+      "id": "sales-013",
+      "expected": "sales",
+      "subject": "does this work with our existing stack?",
+      "body": "Before we go further I want to confirm compatibility - we run on Okta for identity and Snowflake for our warehouse. Does your platform integrate natively with both, or would we need middleware? This is somewhat make-or-break for us."
+    },
+    {
+      "id": "sales-014",
+      "expected": "sales",
+      "subject": "SLA details for enterprise customers",
+      "body": "What uptime SLA applies at the enterprise tier, and what's the actual remedy if it's missed - service credits, something else? Our procurement team will want this documented before we can sign."
+    },
+    {
+      "id": "sales-015",
+      "expected": "sales",
+      "subject": "referral program",
+      "body": "do you have a referral or affiliate program? we'd probably recommend you to a couple of partner companies if there's something in it for us"
+    },
+    {
+      "id": "sales-016",
+      "expected": "sales",
+      "subject": "Adding a second department to the contract",
+      "body": "Hi there,\n\nOur marketing team currently uses the platform under our existing contract, and our product team would now like to come on board as well, roughly 25 additional users. Would this be added as an amendment to the current agreement, or does it need to be a new contract entirely? Also keen to understand if there's any benefit to consolidating billing across both teams.\n\nThanks,\nOwen Bright"
+    },
+    {
+      "id": "sales-017",
+      "expected": "sales",
+      "subject": "expanding into a new region, licensing question",
+      "body": "We're opening an office in Singapore next quarter and want to make sure our licensing covers that properly - is there anything region-specific we need to be aware of, data residency, local pricing, that kind of thing, before we add those seats?"
+    },
+    {
+      "id": "sales-018",
+      "expected": "sales",
+      "subject": "quote for reseller pricing",
+      "body": "Following up on becoming a reseller - could you send over what the reseller pricing structure looks like, margins etc, so I can take it to my partners for a decision?"
+    },
+    {
+      "id": "sales-019",
+      "expected": "sales",
+      "subject": "custom onboarding for a big team",
+      "body": "We'll be rolling this out to around 150 people at once and would like some kind of structured onboarding or training rather than everyone figuring it out individually. Does that come standard at our tier or is it something we'd need to arrange separately?"
+    },
+    {
+      "id": "sales-020",
+      "expected": "sales",
+      "subject": "roadmap question before we commit budget",
+      "body": "Before we finalize budget for next year I wanted to ask whether there's a public or semi-public roadmap we could look at, specifically around planned reporting features, it would help us decide between committing now versus waiting a couple of quarters."
+    },
+    {
+      "id": "sales-021",
+      "expected": "sales",
+      "subject": "case studies for similar companies",
+      "body": "Do you have any case studies from companies of a similar size and industry to us (mid-size logistics, ~400 employees)? Would help build the internal case for switching over."
+    },
+    {
+      "id": "sales-022",
+      "expected": "sales",
+      "subject": "renewal coming up, want to discuss terms",
+      "body": "Our annual renewal is in about six weeks. Before it auto-renews I'd like to have a conversation about terms, we've grown a fair bit since signing and want to make sure the deal still makes sense for where we are now. Who should I be talking to?"
+    },
+    {
+      "id": "sales-023",
+      "expected": "sales",
+      "subject": "switching from monthly to annual",
+      "body": "want to switch to annual billing to get the discount, whats the process and does it start now or at next renewal"
+    },
+    {
+      "id": "sales-024",
+      "expected": "sales",
+      "subject": "RFP submission",
+      "body": "Attached is our RFP for a support-desk platform, response deadline is the 30th. Could you confirm receipt and let us know if you have any questions about the requirements before submitting your proposal?"
+    },
+    {
+      "id": "sales-025",
+      "expected": "sales",
+      "subject": "is SSO only on the top tier?",
+      "body": "Trying to confirm - is SSO/SAML support only available on your top plan, or is it available on the mid tier too? Kind of a dealbreaker for us either way so want to know before we go further."
+    },
+    {
+      "id": "sales-026",
+      "expected": "sales",
+      "subject": "dedicated account manager",
+      "body": "Once we're past a certain size, do we get assigned a dedicated account manager, or is support always just the general queue regardless of contract size? Would factor into our decision."
+    },
+    {
+      "id": "sales-027",
+      "expected": "sales",
+      "subject": "multi currency support before we sign",
+      "body": "We invoice clients in four different currencies and want to confirm the platform can genuinely handle that, not just display conversions but actually issue documents in the right currency, before we commit to a contract."
+    },
+    {
+      "id": "sales-028",
+      "expected": "sales",
+      "subject": "data residency question",
+      "body": "For compliance reasons we need our data to stay within the EU. Can you confirm where data is hosted for EU-based customers, and whether that's guaranteed contractually?"
+    },
+    {
+      "id": "sales-029",
+      "expected": "sales",
+      "subject": "budget approval needs a formal quote",
+      "body": "Hi,\n\nTo get budget approved internally I need a formal, dated quote showing the plan, seat count (40 seats, Professional tier), and any applicable discount for annual payment. Could someone put that together? Happy to hop on a call first if it's easier to confirm details verbally before it's written up.\n\nThanks in advance,\nNadia Petrescu"
+    },
+    {
+      "id": "sales-030",
+      "expected": "sales",
+      "subject": "interested but need pricing in writing",
+      "body": "had a good call with your team last week, was told pricing would follow but haven't seen anything yet, could someone send that over so we can take it to the next stage"
+    },
+    {
+      "id": "sales-031",
+      "expected": "sales",
+      "subject": "Considering migrating from a competitor",
+      "body": "We're currently on a competing platform and reasonably happy but curious what would make us switch. Specifically interested in migration support - would your team help move our existing data and workflows over, or is that entirely on us? Rough timeline and cost for that would help our decision."
+    },
+    {
+      "id": "sales-032",
+      "expected": "sales",
+      "subject": "quote needed by end of week",
+      "body": "procurement needs a formal quote by friday to get this into next quarter's budget cycle, can someone put one together for 60 seats on the growth plan, annual billing"
+    },
+    {
+      "id": "sales-033",
+      "expected": "sales",
+      "subject": "Considering upgrading, want to understand limits",
+      "body": "We keep bumping up against the record limit on our current plan and are looking at what the next tier up unlocks. Could you confirm the record and storage limits at each tier so we can pick the right one rather than having to upgrade again in a few months?"
+    },
+    {
+      "id": "sales-034",
+      "expected": "sales",
+      "subject": "Group discount for multiple subsidiaries",
+      "body": "Good afternoon,\n\nOur parent company has several subsidiaries that could each benefit from this platform, and we're exploring whether it makes sense to negotiate a single group-wide agreement rather than each entity purchasing separately. Combined this would likely be in the range of 250-400 seats across four legal entities in three countries. Is this something your enterprise sales team handles, and could you point me toward whoever manages multi-entity agreements? We'd want to understand both the commercial benefit and how billing/administration would actually work across entities before taking this further internally.\n\nBest regards,\nThomas Reindl\nGroup IT Procurement, Vantessa Holding"
+    },
+    {
+      "id": "ambiguous-001",
+      "expected": "ambiguous",
+      "subject": "we're being charged for something that doesn't work",
+      "body": "I'm not sure who to send this to. We're paying for the premium export add-on but it times out every single time we use it on anything over ~2000 rows. So either the feature is broken or we shouldn't be paying for it. Either way I'd like it sorted."
+    },
+    {
+      "id": "ambiguous-002",
+      "expected": "ambiguous",
+      "subject": "upgrade question",
+      "body": "If we move up to the higher tier does that fix the rate limiting we keep hitting, or is that a separate problem?"
+    },
+    {
+      "id": "ambiguous-003",
+      "expected": "ambiguous",
+      "subject": "cancelling unless this gets fixed",
+      "body": "We've had recurring sync failures for about two weeks now that nobody's been able to resolve, and frankly we're close to cancelling over it. Before we do, I'd like to know two things: whether there's actually a fix coming, and separately, what our options are around the remaining months on our annual contract if we do decide to leave because of this. Not sure if that second part is even something you handle or if it's a different team."
+    },
+    {
+      "id": "ambiguous-004",
+      "expected": "ambiguous",
+      "subject": "does the new plan actually solve our problem",
+      "body": "We've been told by support a few times that the slow report generation we're seeing is 'expected behaviour at your current data volume' and that upgrading to the next plan gives more processing capacity. Before we pay more for a higher tier I want someone to actually confirm that would fix it rather than us just paying more and hitting the same wall."
+    },
+    {
+      "id": "ambiguous-005",
+      "expected": "ambiguous",
+      "subject": "invoice dispute related to an outage",
+      "body": "We were down for about six hours last month due to what your status page called a 'partial service degradation.' Given that, I don't think we should be charged the full amount for that billing period, and I'm also still not clear on what actually caused the outage or whether it could happen again. Would like both addressed."
+    },
+    {
+      "id": "ambiguous-006",
+      "expected": "ambiguous",
+      "subject": "not sure this is even the right team",
+      "body": "quick question that might not even be for you specifically - we want to add a bunch of seats but our current integration is already kind of flaky with the seat count we have now, so before committing to more I want to know if adding seats makes the flakiness worse or if it's unrelated. who would even answer that"
+    },
+    {
+      "id": "ambiguous-007",
+      "expected": "ambiguous",
+      "subject": "renewal is coming up and we're stuck",
+      "body": "Our renewal is in three weeks and honestly we haven't decided yet, partly because of pricing and partly because we've had an open issue for over a month where scheduled reports just silently fail about half the time. If that gets fixed before renewal we'll likely stay, if not we're probably not renewing at the current price regardless. Wanted to flag both pieces together since they're connected for us even if they're probably different departments on your end."
+    },
+    {
+      "id": "ambiguous-008",
+      "expected": "ambiguous",
+      "subject": "refund or fix?",
+      "body": "the automation feature we specifically upgraded for has never worked properly since we signed up two months ago, keeps failing on step 3 of 4 with no error message. at this point i just want to know whether this is getting fixed soon or whether we should be asking for our money back on the upgrade, havent decided which id rather have"
+    },
+    {
+      "id": "ambiguous-009",
+      "expected": "ambiguous",
+      "subject": "seats vs a workaround",
+      "body": "We're hitting our seat limit constantly because several people share one login to avoid buying more seats - which I know isn't really supported. Rather than just buying more seats, is there a role or view-only license that would actually fit what these extra people need, since they don't need full access, just to see reports? Wasn't sure if this is a pricing question or something to configure."
+    },
+    {
+      "id": "ambiguous-010",
+      "expected": "ambiguous",
+      "subject": "half our data is missing after the plan change",
+      "body": "We upgraded plans last week specifically to get the higher storage limit, and since the upgrade roughly half of our historical records seem to have disappeared from the dashboard. Did the upgrade itself cause this somehow, and separately, are we now being billed correctly given we can't actually see the data we upgraded to store?"
+    },
+    {
+      "id": "ambiguous-011",
+      "expected": "ambiguous",
+      "subject": "email bounced, also a price question",
+      "body": "Two things - our invoice emails have started bouncing back as undeliverable the last two months even though the address hasn't changed, and while I've got someone's attention, we were also told back in the spring that we'd get a loyalty discount applied at renewal and I don't see it on the last invoice either. Might be two different issues, not sure."
+    },
+    {
+      "id": "ambiguous-012",
+      "expected": "ambiguous",
+      "subject": "would switching plans stop the errors",
+      "body": "we keep getting 'quota exceeded' errors on API calls that, based on the docs, we shouldn't be close to hitting yet at our current plan's limits. is this a bug in how usage is being counted, or do we actually need to upgrade? genuinely can't tell from our side"
+    },
+    {
+      "id": "ambiguous-013",
+      "expected": "ambiguous",
+      "subject": "confused about what we're even paying for now",
+      "body": "Hi,\n\nSomewhere between a plan change a few months back and what looks like an add-on that got enabled without us asking for it, I've genuinely lost track of what we're paying for versus what we actually use. There's a feature on the invoice labelled 'priority processing' that I don't think anyone here even knew existed, let alone asked for, and I also can't tell if the thing it's supposed to do (faster report generation) is actually happening, because reports still feel just as slow as before. Could someone help me understand both what's on our bill and whether the feature we're paying for is actually functioning?\n\nThanks,\nBecca"
+    },
+    {
+      "id": "ambiguous-014",
+      "expected": "ambiguous",
+      "subject": "not sure if broken or just how it works",
+      "body": "when we export to PDF the totals on the report don't match the totals shown on screen, off by a small amount each time. is this a rounding/display difference that's expected, or an actual bug? want to know before I mention it to our finance team as either 'known quirk' or 'reported bug'"
+    },
+    {
+      "id": "ambiguous-015",
+      "expected": "ambiguous",
+      "subject": "considering the higher tier because of ongoing issues",
+      "body": "We keep getting told our slowdowns are due to being on a lower tier with fewer resources allocated, so we're considering upgrading, but I'd like some actual confirmation that resource allocation is really the cause here rather than just paying more and finding out it was something else the whole time, which has happened to us with other vendors before."
+    },
+    {
+      "id": "ambiguous-016",
+      "expected": "ambiguous",
+      "subject": "double charged, or did the upgrade duplicate something",
+      "body": "We see two charges this month, one at the old plan rate and one at the new plan rate after we upgraded mid-month. Is that just proration working as expected, or were we actually double charged? The amounts don't obviously add up to what I'd expect from proration but I could be doing the maths wrong."
+    },
+    {
+      "id": "ambiguous-017",
+      "expected": "ambiguous",
+      "subject": "add-on we're not sure is worth it, or working",
+      "body": "We added the advanced reporting add-on three months ago and honestly I'm not sure it's doing anything different from the standard reports - possibly it's not enabled properly, or possibly it just isn't as different as we expected and we made the wrong call adding it. Could someone check whether it's actually active on our account and working, and if it is, help me understand what it should look like differently so we can decide if it's worth keeping?"
+    },
+    {
+      "id": "ambiguous-018",
+      "expected": "ambiguous",
+      "subject": "stuck between a bug report and a plan question",
+      "body": "Apologies if this lands in the wrong queue. Since our team grew past 50 users a couple of weeks ago, notifications have become unreliable - some people get them instantly, others not for hours, a few not at all. Someone on your team previously mentioned that notification delivery can be affected by account size on lower tiers, which would suggest an upgrade is the fix, but that felt more like a guess than a confirmed explanation, so I don't want to pay for a tier change if the real issue turns out to be something else entirely, like a bug in how notifications are queued."
+    }
+  ]
+}
