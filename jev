@@ -155,6 +155,20 @@ wait_for() {
 cmd_up() {
   need_key
   ensure_jar
+
+  # This stack binds 8080/26500/9600. Another Camunda already on those ports gets
+  # killed in the fight, so refuse rather than break someone's existing cluster.
+  local squatter
+  squatter=$(docker ps --format '{{.Names}}\t{{.Ports}}' 2>/dev/null \
+    | grep -E '(^|[^0-9])26500->' | grep -v '^jev-' | cut -f1 | head -1)
+  if [[ -n "$squatter" ]]; then
+    die "container '$squatter' is already using port 26500.
+  You appear to have your own Camunda running. Either use that one:
+      ./jev deploy && ./jev run \"some ticket\"
+  or stop it first, then retry:
+      docker stop $squatter"
+  fi
+
   step "Starting Camunda 8 + connector runtime"
   compose up -d --wait 2>/dev/null || compose up -d
   wait_for "http://localhost:9600/actuator/health/status" "orchestration" 90
@@ -176,11 +190,22 @@ cmd_down() {
 }
 
 cmd_deploy() {
-  step "Deploying $(basename "$BPMN")"
+  # Forms must be deployed alongside their process, or a user task referencing a
+  # formId fails to render in Tasklist. Send every resource in examples/.
+  local -a args=() names=()
+  local f
+  for f in "$ROOT"/examples/*.bpmn "$ROOT"/examples/*.form; do
+    [[ -e "$f" ]] || continue
+    args+=(-F "resources=@$f")
+    names+=("$(basename "$f")")
+  done
+  [[ ${#args[@]} -gt 0 ]] || die "no .bpmn or .form files found in $ROOT/examples"
+
+  step "Deploying ${names[*]}"
   local out
   out=$(curl -sf -X POST "$REST/v2/deployments" \
         -H "Accept: application/json" \
-        -F "resources=@$BPMN") || die "deploy failed - is the stack up? (./jev up)"
+        "${args[@]}") || die "deploy failed - is the stack up? (./jev up)"
   say "$out" | python3 -c "
 import json,sys
 d=json.load(sys.stdin)
@@ -188,6 +213,9 @@ for item in d.get('deployments', []):
     p = item.get('processDefinition') or {}
     if p:
         print('  process:', p.get('processDefinitionId'), 'version', p.get('processDefinitionVersion'))
+    f = item.get('form') or {}
+    if f:
+        print('  form:   ', f.get('formId'), 'version', f.get('version'))
 print('  deploymentKey:', d.get('deploymentKey'))
 " 2>/dev/null || say "$out"
   ok "deployed"

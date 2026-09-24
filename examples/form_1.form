@@ -1,0 +1,37 @@
+{
+  "components": [
+    {
+      "label": "Issue",
+      "type": "textarea",
+      "layout": {
+        "row": "Row_19f97qq",
+        "columns": null
+      },
+      "id": "Field_181pem2",
+      "key": "textarea_uhurat",
+      "description": "What is your issue",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "label": "Submit",
+      "action": "submit",
+      "type": "button",
+      "layout": {
+        "row": "Row_1mlzwnq",
+        "columns": null
+      },
+      "id": "Field_0wcdhe9"
+    }
+  ],
+  "type": "default",
+  "id": "support-request",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.9.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.51.1"
+  },
+  "schemaVersion": 19
+}
