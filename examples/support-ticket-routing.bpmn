@@ -1,14 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_JevSupportRouting" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.51.1" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.9.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:zeebe="http://camunda.org/schema/zeebe/1.0"
+                  xmlns:modeler="http://camunda.org/schema/modeler/1.0"
+                  id="Definitions_JevSupportRouting"
+                  targetNamespace="http://bpmn.io/schema/bpmn"
+                  exporter="Camunda Modeler" exporterVersion="5.0.0"
+                  modeler:executionPlatform="Camunda Cloud"
+                  modeler:executionPlatformVersion="8.9.0">
   <bpmn:process id="support-ticket-routing" name="Support ticket routing" isExecutable="true">
+
     <bpmn:startEvent id="StartEvent_TicketReceived" name="Ticket received">
-      <bpmn:outgoing>Flow_0us5tt6</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ToRouter</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:serviceTask id="Task_JevRouter" name="Route ticket">
+
+    <bpmn:serviceTask id="Task_JevRouter" name="Route ticket"
+                      zeebe:modelerTemplate="ai.typesafe.camunda.jev.router.v1">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="ai.typesafe:jev-router:1" retries="3" />
         <zeebe:ioMapping>
           <zeebe:input source="{{secrets.TYPESAFE_API_KEY}}" target="apiKey" />
+          <!-- A process variable holding an object: sent to Jev as structured JSON. -->
           <zeebe:input source="=ticket" target="state" />
           <zeebe:input source="Which team should handle this ticket?" target="question" />
           <zeebe:input source="={billing: &#34;Payments, invoicing, refunds&#34;, technical: &#34;Bugs, outages, integrations&#34;, sales: &#34;Pricing, upgrades, new accounts&#34;}" target="options" />
@@ -22,9 +36,10 @@
           <zeebe:header key="retryBackoff" value="PT0S" />
         </zeebe:taskHeaders>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0zi7gc5</bpmn:incoming>
+      <bpmn:incoming>Flow_ToRouter</bpmn:incoming>
       <bpmn:outgoing>Flow_ToGateway</bpmn:outgoing>
     </bpmn:serviceTask>
+
     <bpmn:exclusiveGateway id="Gateway_Route" name="Which team?">
       <bpmn:incoming>Flow_ToGateway</bpmn:incoming>
       <bpmn:outgoing>Flow_Billing</bpmn:outgoing>
@@ -32,6 +47,7 @@
       <bpmn:outgoing>Flow_Sales</bpmn:outgoing>
       <bpmn:outgoing>Flow_Undecided</bpmn:outgoing>
     </bpmn:exclusiveGateway>
+
     <bpmn:userTask id="Task_Billing" name="Billing queue">
       <bpmn:incoming>Flow_Billing</bpmn:incoming>
       <bpmn:outgoing>Flow_BillingEnd</bpmn:outgoing>
@@ -44,10 +60,12 @@
       <bpmn:incoming>Flow_Sales</bpmn:incoming>
       <bpmn:outgoing>Flow_SalesEnd</bpmn:outgoing>
     </bpmn:userTask>
+    <!-- Where low-confidence decisions go, instead of being guessed at. -->
     <bpmn:userTask id="Task_HumanTriage" name="Human triage">
       <bpmn:incoming>Flow_Undecided</bpmn:incoming>
       <bpmn:outgoing>Flow_TriageEnd</bpmn:outgoing>
     </bpmn:userTask>
+
     <bpmn:endEvent id="End_Billing" name="Routed to billing">
       <bpmn:incoming>Flow_BillingEnd</bpmn:incoming>
     </bpmn:endEvent>
@@ -60,153 +78,96 @@
     <bpmn:endEvent id="End_Triage" name="Triaged by a human">
       <bpmn:incoming>Flow_TriageEnd</bpmn:incoming>
     </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_ToRouter" sourceRef="StartEvent_TicketReceived" targetRef="Task_JevRouter" />
     <bpmn:sequenceFlow id="Flow_ToGateway" sourceRef="Task_JevRouter" targetRef="Gateway_Route" />
+
     <bpmn:sequenceFlow id="Flow_Billing" name="billing" sourceRef="Gateway_Route" targetRef="Task_Billing">
-      <bpmn:conditionExpression xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="bpmn:tFormalExpression">=jevResult.choice = "billing"</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">=jevResult.choice = "billing"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_Technical" name="technical" sourceRef="Gateway_Route" targetRef="Task_Technical">
-      <bpmn:conditionExpression xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="bpmn:tFormalExpression">=jevResult.choice = "technical"</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">=jevResult.choice = "technical"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_Sales" name="sales" sourceRef="Gateway_Route" targetRef="Task_Sales">
-      <bpmn:conditionExpression xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="bpmn:tFormalExpression">=jevResult.choice = "sales"</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">=jevResult.choice = "sales"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_Undecided" name="undecided" sourceRef="Gateway_Route" targetRef="Task_HumanTriage">
-      <bpmn:conditionExpression xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="bpmn:tFormalExpression">=jevResult.choice = "undecided"</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">=jevResult.choice = "undecided"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
+
     <bpmn:sequenceFlow id="Flow_BillingEnd" sourceRef="Task_Billing" targetRef="End_Billing" />
     <bpmn:sequenceFlow id="Flow_TechnicalEnd" sourceRef="Task_Technical" targetRef="End_Technical" />
     <bpmn:sequenceFlow id="Flow_SalesEnd" sourceRef="Task_Sales" targetRef="End_Sales" />
     <bpmn:sequenceFlow id="Flow_TriageEnd" sourceRef="Task_HumanTriage" targetRef="End_Triage" />
-    <bpmn:userTask id="Activity_10ybgke" name="support ticket">
-      <bpmn:extensionElements>
-        <zeebe:userTask />
-        <zeebe:formDefinition formId="support-request" />
-        <zeebe:ioMapping>
-          <zeebe:output source="=textarea_uhurat" target="ticket" />
-        </zeebe:ioMapping>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0us5tt6</bpmn:incoming>
-      <bpmn:outgoing>Flow_0zi7gc5</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:sequenceFlow id="Flow_0us5tt6" sourceRef="StartEvent_TicketReceived" targetRef="Activity_10ybgke" />
-    <bpmn:sequenceFlow id="Flow_0zi7gc5" sourceRef="Activity_10ybgke" targetRef="Task_JevRouter" />
   </bpmn:process>
+
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="support-ticket-routing">
-      <bpmndi:BPMNShape id="Shape_Gateway" bpmnElement="Gateway_Route" isMarkerVisible="true">
-        <dc:Bounds x="565" y="275" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="624.5" y="293" width="65" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Billing" bpmnElement="Task_Billing">
-        <dc:Bounds x="700" y="80" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Technical" bpmnElement="Task_Technical">
-        <dc:Bounds x="700" y="200" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Sales" bpmnElement="Task_Sales">
-        <dc:Bounds x="700" y="320" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Triage" bpmnElement="Task_HumanTriage">
-        <dc:Bounds x="700" y="440" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_EndBilling" bpmnElement="End_Billing">
-        <dc:Bounds x="872" y="102" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="851" y="138" width="79" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_EndTechnical" bpmnElement="End_Technical">
-        <dc:Bounds x="872" y="222" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="866" y="258" width="48" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_EndSales" bpmnElement="End_Sales">
-        <dc:Bounds x="872" y="342" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="852" y="378" width="77" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_EndTriage" bpmnElement="End_Triage">
-        <dc:Bounds x="872" y="462" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="860" y="498" width="61" height="27" />
-        </bpmndi:BPMNLabel>
+      <bpmndi:BPMNShape id="Shape_Start" bpmnElement="StartEvent_TicketReceived">
+        <dc:Bounds x="160" y="282" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="145" y="325" width="70" height="14" /></bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Router" bpmnElement="Task_JevRouter">
-        <dc:Bounds x="420" y="260" width="100" height="80" />
+        <dc:Bounds x="250" y="260" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Start" bpmnElement="StartEvent_TicketReceived">
-        <dc:Bounds x="172" y="282" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="155" y="325" width="74" height="14" />
-        </bpmndi:BPMNLabel>
+      <bpmndi:BPMNShape id="Shape_Gateway" bpmnElement="Gateway_Route" isMarkerVisible="true">
+        <dc:Bounds x="415" y="275" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="410" y="332" width="61" height="14" /></bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_10ybgke_di" bpmnElement="Activity_10ybgke">
-        <dc:Bounds x="270" y="260" width="100" height="80" />
-        <bpmndi:BPMNLabel />
+      <bpmndi:BPMNShape id="Shape_Billing" bpmnElement="Task_Billing">
+        <dc:Bounds x="550" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Technical" bpmnElement="Task_Technical">
+        <dc:Bounds x="550" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Sales" bpmnElement="Task_Sales">
+        <dc:Bounds x="550" y="320" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Triage" bpmnElement="Task_HumanTriage">
+        <dc:Bounds x="550" y="440" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndBilling" bpmnElement="End_Billing">
+        <dc:Bounds x="722" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndTechnical" bpmnElement="End_Technical">
+        <dc:Bounds x="722" y="222" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndSales" bpmnElement="End_Sales">
+        <dc:Bounds x="722" y="342" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndTriage" bpmnElement="End_Triage">
+        <dc:Bounds x="722" y="462" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Edge_ToRouter" bpmnElement="Flow_ToRouter">
+        <di:waypoint x="196" y="300" /><di:waypoint x="250" y="300" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_ToGateway" bpmnElement="Flow_ToGateway">
-        <di:waypoint x="520" y="300" />
-        <di:waypoint x="565" y="300" />
+        <di:waypoint x="350" y="300" /><di:waypoint x="415" y="300" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Billing" bpmnElement="Flow_Billing">
-        <di:waypoint x="590" y="275" />
-        <di:waypoint x="590" y="120" />
-        <di:waypoint x="700" y="120" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="591" y="188" width="29" height="14" />
-        </bpmndi:BPMNLabel>
+        <di:waypoint x="440" y="275" /><di:waypoint x="440" y="120" /><di:waypoint x="550" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Technical" bpmnElement="Flow_Technical">
-        <di:waypoint x="590" y="275" />
-        <di:waypoint x="590" y="240" />
-        <di:waypoint x="700" y="240" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="583" y="248" width="44" height="14" />
-        </bpmndi:BPMNLabel>
+        <di:waypoint x="440" y="275" /><di:waypoint x="440" y="240" /><di:waypoint x="550" y="240" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Sales" bpmnElement="Flow_Sales">
-        <di:waypoint x="590" y="325" />
-        <di:waypoint x="590" y="360" />
-        <di:waypoint x="700" y="360" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="592" y="333" width="26" height="14" />
-        </bpmndi:BPMNLabel>
+        <di:waypoint x="440" y="325" /><di:waypoint x="440" y="360" /><di:waypoint x="550" y="360" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Undecided" bpmnElement="Flow_Undecided">
-        <di:waypoint x="590" y="325" />
-        <di:waypoint x="590" y="480" />
-        <di:waypoint x="700" y="480" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="580" y="393" width="51" height="14" />
-        </bpmndi:BPMNLabel>
+        <di:waypoint x="440" y="325" /><di:waypoint x="440" y="480" /><di:waypoint x="550" y="480" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_BillingEnd" bpmnElement="Flow_BillingEnd">
-        <di:waypoint x="800" y="120" />
-        <di:waypoint x="872" y="120" />
+        <di:waypoint x="650" y="120" /><di:waypoint x="722" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_TechnicalEnd" bpmnElement="Flow_TechnicalEnd">
-        <di:waypoint x="800" y="240" />
-        <di:waypoint x="872" y="240" />
+        <di:waypoint x="650" y="240" /><di:waypoint x="722" y="240" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_SalesEnd" bpmnElement="Flow_SalesEnd">
-        <di:waypoint x="800" y="360" />
-        <di:waypoint x="872" y="360" />
+        <di:waypoint x="650" y="360" /><di:waypoint x="722" y="360" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_TriageEnd" bpmnElement="Flow_TriageEnd">
-        <di:waypoint x="800" y="480" />
-        <di:waypoint x="872" y="480" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0us5tt6_di" bpmnElement="Flow_0us5tt6">
-        <di:waypoint x="208" y="300" />
-        <di:waypoint x="270" y="300" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0zi7gc5_di" bpmnElement="Flow_0zi7gc5">
-        <di:waypoint x="370" y="300" />
-        <di:waypoint x="420" y="300" />
+        <di:waypoint x="650" y="480" /><di:waypoint x="722" y="480" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

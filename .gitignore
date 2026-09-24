@@ -10,3 +10,6 @@ target/
 
 # Tooling from the java-upgrade agent, not part of this project
 .github/modernize/
+
+# Local experiments, not part of the project
+scratch/
