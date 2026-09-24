@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:zeebe="http://camunda.org/schema/zeebe/1.0"
+                  xmlns:modeler="http://camunda.org/schema/modeler/1.0"
+                  id="Definitions_JevLoadTest"
+                  targetNamespace="http://bpmn.io/schema/bpmn"
+                  exporter="Camunda Modeler" exporterVersion="5.0.0"
+                  modeler:executionPlatform="Camunda Cloud"
+                  modeler:executionPlatformVersion="8.9.0">
+  <bpmn:process id="support-ticket-loadtest" name="Support ticket routing (load test)" isExecutable="true">
+
+    <bpmn:startEvent id="StartEvent_Ticket" name="Ticket received">
+      <bpmn:outgoing>Flow_ToRouter</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="Task_JevRouter" name="Route ticket"
+                      zeebe:modelerTemplate="ai.typesafe.camunda.jev.router.v1">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="ai.typesafe:jev-router:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="{{secrets.TYPESAFE_API_KEY}}" target="apiKey" />
+          <zeebe:input source="=ticket" target="state" />
+          <zeebe:input source="Which team should handle this ticket?" target="question" />
+          <zeebe:input source="={billing: &#34;Payments, invoicing, refunds&#34;, technical: &#34;Bugs, outages, integrations&#34;, sales: &#34;Pricing, upgrades, new accounts&#34;}" target="options" />
+          <zeebe:input source="=threshold" target="threshold" />
+          <zeebe:input source="jev-1.13.0" target="model" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="jevResult" />
+          <zeebe:header key="elementTemplateId" value="ai.typesafe.camunda.jev.router.v1" />
+          <zeebe:header key="elementTemplateVersion" value="1" />
+          <zeebe:header key="retryBackoff" value="PT0S" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToRouter</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToGateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_Route" name="Which team?">
+      <bpmn:incoming>Flow_ToGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Billing</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Technical</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Sales</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Undecided</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="End_Billing" name="Routed to billing">
+      <bpmn:incoming>Flow_Billing</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_Technical" name="Routed to technical">
+      <bpmn:incoming>Flow_Technical</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_Sales" name="Routed to sales">
+      <bpmn:incoming>Flow_Sales</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:userTask id="Task_HumanReview" name="Human review">
+      <bpmn:incoming>Flow_Undecided</bpmn:incoming>
+      <bpmn:outgoing>Flow_ReviewEnd</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Reviewed" name="Reviewed by a human">
+      <bpmn:incoming>Flow_ReviewEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_ToRouter" sourceRef="StartEvent_Ticket" targetRef="Task_JevRouter" />
+    <bpmn:sequenceFlow id="Flow_ToGateway" sourceRef="Task_JevRouter" targetRef="Gateway_Route" />
+    <bpmn:sequenceFlow id="Flow_Billing" name="billing" sourceRef="Gateway_Route" targetRef="End_Billing">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=jevResult.choice = "billing"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Technical" name="technical" sourceRef="Gateway_Route" targetRef="End_Technical">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=jevResult.choice = "technical"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Sales" name="sales" sourceRef="Gateway_Route" targetRef="End_Sales">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=jevResult.choice = "sales"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Undecided" name="undecided" sourceRef="Gateway_Route" targetRef="Task_HumanReview">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=jevResult.choice = "undecided"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ReviewEnd" sourceRef="Task_HumanReview" targetRef="End_Reviewed" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="support-ticket-loadtest">
+      <bpmndi:BPMNShape id="Shape_Start" bpmnElement="StartEvent_Ticket">
+        <dc:Bounds x="160" y="262" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Router" bpmnElement="Task_JevRouter">
+        <dc:Bounds x="250" y="240" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway" bpmnElement="Gateway_Route" isMarkerVisible="true">
+        <dc:Bounds x="415" y="255" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndBilling" bpmnElement="End_Billing">
+        <dc:Bounds x="562" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndTechnical" bpmnElement="End_Technical">
+        <dc:Bounds x="562" y="202" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndSales" bpmnElement="End_Sales">
+        <dc:Bounds x="562" y="302" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Review" bpmnElement="Task_HumanReview">
+        <dc:Bounds x="530" y="390" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndReviewed" bpmnElement="End_Reviewed">
+        <dc:Bounds x="702" y="412" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_ToRouter" bpmnElement="Flow_ToRouter">
+        <di:waypoint x="196" y="280" /><di:waypoint x="250" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_ToGateway" bpmnElement="Flow_ToGateway">
+        <di:waypoint x="350" y="280" /><di:waypoint x="415" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Billing" bpmnElement="Flow_Billing">
+        <di:waypoint x="440" y="255" /><di:waypoint x="440" y="120" /><di:waypoint x="562" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Technical" bpmnElement="Flow_Technical">
+        <di:waypoint x="440" y="255" /><di:waypoint x="440" y="220" /><di:waypoint x="562" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Sales" bpmnElement="Flow_Sales">
+        <di:waypoint x="440" y="305" /><di:waypoint x="440" y="320" /><di:waypoint x="562" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Undecided" bpmnElement="Flow_Undecided">
+        <di:waypoint x="440" y="305" /><di:waypoint x="440" y="430" /><di:waypoint x="530" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_ReviewEnd" bpmnElement="Flow_ReviewEnd">
+        <di:waypoint x="630" y="430" /><di:waypoint x="702" y="430" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
