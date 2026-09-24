@@ -154,7 +154,9 @@ class ArtifactsTest {
 
     // Exactly one user task: the human queue. Confident routes must not park,
     // or throughput would measure nothing but an unattended queue.
-    NodeList userTasks = document.getElementsByTagNameNS("*", "userTask");
+    NodeList userTasks =
+        document.getElementsByTagNameNS(
+            "http://www.omg.org/spec/BPMN/20100524/MODEL", "userTask");
     assertThat(userTasks.getLength()).isEqualTo(1);
     assertThat(((Element) userTasks.item(0)).getAttribute("id")).isEqualTo("Task_HumanReview");
 

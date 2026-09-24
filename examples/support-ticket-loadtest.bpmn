@@ -59,6 +59,9 @@
     </bpmn:endEvent>
 
     <bpmn:userTask id="Task_HumanReview" name="Human review">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_Undecided</bpmn:incoming>
       <bpmn:outgoing>Flow_ReviewEnd</bpmn:outgoing>
     </bpmn:userTask>
