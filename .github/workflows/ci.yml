@@ -57,6 +57,9 @@ jobs:
             exit 1
           fi
 
+      - name: Run simulation unit tests
+        run: python3 -m unittest discover -s simulation -p 'test_*.py' -t . -v
+
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
