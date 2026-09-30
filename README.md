@@ -62,6 +62,7 @@ example process, pushes a support ticket through it, and prints where Jev routed
 | `./jev deploy` | Deploy the example process |
 | `./jev run [text]` | Start one ticket and show where it routed |
 | `./jev status` / `./jev logs` | Container and endpoint health / tail logs |
+| `./jev simulate [opts]` | Feed N labelled tickets through the load-test process and report |
 
 `./jev ask` is the fastest way to see the model work — it needs only a key, and it drives the same
 `JevRouterFunction` the runtime executes, so it is not a separate code path.
@@ -156,6 +157,28 @@ came back `undecided`, lower the threshold. If they keep overriding confident pi
 Two caveats worth planning around. Jev's probabilities can vary between requests, so tune on a body
 of real data rather than a handful of replays. And the right threshold depends on consequences, not
 on the model — a decision that's cheap to undo can run much looser than one that isn't.
+
+## Measuring it under load
+
+`./jev simulate` feeds synthetic, **labelled** tickets through a separate load-test process and
+reports what happened:
+
+```bash
+./jev simulate --count 2000 --rate 10
+```
+
+Because each ticket carries the team it should have gone to, the report separates outcomes that an
+unlabelled run cannot tell apart — an escalation that saved you from a misroute looks identical to
+one that was simply wasted, unless you know the right answer.
+
+It also sweeps the threshold offline. The connector keeps `jevChoice` and `confidence` even when it
+escalates, so a single run shows what every threshold from 0.50 to 0.95 would have produced. That is
+the number this README tells you to tune, and one run answers it for the whole range.
+
+A 2000-ticket run costs roughly $0.03 in Jev tokens and stays well inside the documented rate limit.
+
+Reported latency is measured from send to observation and therefore includes polling delay; the poll
+interval is printed alongside it. It is not a measure of connector latency.
 
 ## Limits
 
