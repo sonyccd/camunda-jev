@@ -22,7 +22,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <version.connectors>8.9.12</version.connectors>
-    <version.jackson>2.22.2</version.jackson>
+    <version.jackson>2.22.3</version.jackson>
     <version.slf4j>2.0.18</version.slf4j>
     <version.assertj>3.27.7</version.assertj>
     <version.junit-jupiter>6.1.2</version.junit-jupiter>
